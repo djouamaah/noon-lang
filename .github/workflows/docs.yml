@@ -54,6 +54,37 @@ jobs:
         with:
           path: site
 
+  # يبني ما يُرفق بالإصدار في كل دفعة، فتظهر مشكلة التحزيم قبل وسم الإصدار لا بعده
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Versions agree everywhere
+        run: python tools/check_version.py
+
+      - name: Build the Python package
+        run: |
+          pip install build
+          python -m build
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Package the VS Code extension
+        working-directory: editors/vscode
+        run: npx --yes @vscode/vsce@3 package --out ../../dist/
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: packages
+          path: dist/
+
   deploy:
     if: github.event_name != 'pull_request'
     needs: build

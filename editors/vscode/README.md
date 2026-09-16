@@ -1,6 +1,6 @@
 # إضافة «نون» لـ VS Code
 
-تلوين صيغة لغة [نون](../../README.md) العربية، مع مقاطع جاهزة (snippets)
+تلوين صيغة لغة [نون](https://djouamaah.github.io/noon-lang/) العربية، مع مقاطع جاهزة (snippets)
 وضبطًا للأقواس والتعليقات وحدود الكلمة العربية.
 
 ## التثبيت
@@ -11,13 +11,13 @@
 **ويندوز**
 
 ```bash
-xcopy /E /I editors\vscode "%USERPROFILE%\.vscode\extensions\noon-lang-1.0.0"
+xcopy /E /I editors\vscode "%USERPROFILE%\.vscode\extensions\noon-lang-1.1.0"
 ```
 
 **لينكس/ماك**
 
 ```bash
-cp -r editors/vscode ~/.vscode/extensions/noon-lang-1.0.0
+cp -r editors/vscode ~/.vscode/extensions/noon-lang-1.1.0
 ```
 
 وللتطوير على الإضافة نفسها، الوصلة الرمزية أفضل من النسخ لأن كل تعديل يظهر

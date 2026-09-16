@@ -73,7 +73,14 @@ python noon.py مرحبا.noon
 
 ## التثبيت أمرًا في النظام
 
-إن أردت كتابة `noon` بدل `python noon.py`:
+إن أردت كتابة `noon` بدل `python noon.py`، ثبّت الحزمة من
+[آخر إصدار](https://github.com/djouamaah/noon-lang/releases/latest):
+
+```bash
+pip install https://github.com/djouamaah/noon-lang/releases/download/v1.1.0/noon_lang-1.1.0-py3-none-any.whl
+```
+
+أو من نسختك من المستودع، فتظهر تعديلاتك فورًا:
 
 ```bash
 pip install -e .

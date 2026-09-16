@@ -13,22 +13,25 @@ VS Code ثم أعِد تشغيل المحرّر:
 === "ويندوز"
 
     ```bash
-    xcopy /E /I editors\vscode "%USERPROFILE%\.vscode\extensions\noon-lang-1.0.0"
+    xcopy /E /I editors\vscode "%USERPROFILE%\.vscode\extensions\noon-lang-1.1.0"
     ```
 
 === "لينكس وماك"
 
     ```bash
-    cp -r editors/vscode ~/.vscode/extensions/noon-lang-1.0.0
+    cp -r editors/vscode ~/.vscode/extensions/noon-lang-1.1.0
     ```
 
 === "ملف ‎.vsix"
 
+    نزّل `noon-lang-1.1.0.vsix` من [صفحة الإصدار](https://github.com/djouamaah/noon-lang/releases/latest)،
+    ثم:
+
     ```bash
-    cd editors/vscode
-    npx @vscode/vsce package
-    code --install-extension noon-lang-1.0.0.vsix
+    code --install-extension noon-lang-1.1.0.vsix
     ```
+
+    أو ابنِه بنفسك: `cd editors/vscode && npx @vscode/vsce package`.
 
 بعدها يُفتح كل ملف `.noon` أو `.نون` ملوَّنًا.
 

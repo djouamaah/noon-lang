@@ -1,0 +1,76 @@
+name: Release
+
+# Pushing a tag such as v1.1.0 publishes a GitHub release with the Python
+# package (wheel and sdist) and the VS Code extension (.vsix) attached, and
+# the matching CHANGELOG.md section as its notes. Nothing is published unless
+# the tag matches every version in the repository and all tests pass.
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: docs/requirements.txt
+
+      - name: Tag matches every version
+        run: python tools/check_version.py "$GITHUB_REF_NAME"
+
+      - name: Install test and build tools
+        run: pip install -r docs/requirements.txt build
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Tests
+        run: |
+          python tests/test_noon.py
+          python tests/test_vm.py
+          python tests/test_docs.py
+          python tests/test_playground.py
+
+      - name: Build the Python package
+        run: python -m build
+
+      - name: Package the VS Code extension
+        working-directory: editors/vscode
+        run: npx --yes @vscode/vsce@3 package --out ../../dist/
+
+      - name: Release notes
+        run: |
+          {
+            python tools/check_version.py "$GITHUB_REF_NAME" --notes
+            echo
+            echo "---"
+            echo
+            echo "**التثبيت**"
+            echo
+            echo '```bash'
+            echo "pip install https://github.com/$GITHUB_REPOSITORY/releases/download/$GITHUB_REF_NAME/noon_lang-${GITHUB_REF_NAME#v}-py3-none-any.whl"
+            echo '```'
+            echo
+            echo "ثم \`noon برنامج.noon\`. وإضافة VS Code: \`code --install-extension noon-lang-${GITHUB_REF_NAME#v}.vsix\`."
+            echo
+            echo "أو جرّبها دون تثبيت في [ساحة التجربة](https://djouamaah.github.io/noon-lang/playground/)، واقرأ [التوثيق](https://djouamaah.github.io/noon-lang/)."
+          } > "$RUNNER_TEMP/notes.md"
+          cat "$RUNNER_TEMP/notes.md"
+
+      - name: Publish the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" dist/*.whl dist/*.tar.gz dist/*.vsix \
+            --title "نون ${GITHUB_REF_NAME}" \
+            --notes-file "$RUNNER_TEMP/notes.md" \
+            --verify-tag
