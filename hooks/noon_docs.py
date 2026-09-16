@@ -29,7 +29,7 @@ for path in (ROOT, os.path.join(ROOT, "tools")):
 # الخطّاف، فالاستيراد المؤجَّل يفشل حين يُشغَّل `mkdocs serve` من مجلّد آخر.
 from noon import values                              # noqa: E402
 from noon.errors import NoonError, NoonThrow         # noqa: E402
-from noon.interpreter import Interpreter             # noqa: E402
+from noon.vm import VM                               # noqa: E402
 from preview_highlight import load_rules, tokenize_line  # noqa: E402
 
 # نطاق TextMate ← صنف Pygments؛ الأخصّ أوّلًا
@@ -99,15 +99,19 @@ def highlight(source):
 
 
 def run_program(source):
-    """ينفّذ برنامجًا ويُرجع ما طبعه، أو رسالة الخطأ كما يعرضها سطر الأوامر."""
+    """ينفّذ برنامجًا ويُرجع ما طبعه، أو رسالة الخطأ كما يعرضها سطر الأوامر.
+
+    يُنفَّذ بالآلة الافتراضية لأنها المحرّك الافتراضي؛ وتطابقها مع المُفسِّر في كل
+    مثال هنا يختبره tests/test_vm.py.
+    """
     buffer = io.StringIO()
-    interpreter = Interpreter(out=buffer)
+    engine = VM(out=buffer)
     try:
-        interpreter.run(source)
+        engine.run(source)
     except NoonError as error:
         buffer.write("%s\n" % error)
     except NoonThrow as thrown:
-        buffer.write("قيمة مرميّة لم تُلتقط: %s\n" % interpreter.stringify(thrown.value))
+        buffer.write("قيمة مرميّة لم تُلتقط: %s\n" % engine.stringify(thrown.value))
     finally:
         values.set_arabic_digits(False)
     return buffer.getvalue()

@@ -100,6 +100,13 @@ def test_reference_lists_every_builtin_keyword_and_method():
         assert not missing, "توابع %s غير موثَّقة: %s" % (title, "، ".join(missing))
 
 
+def test_compiler_page_documents_every_instruction():
+    from noon import opcodes
+    page = _read(os.path.join(DOCS, "internals", "compiler.md"))
+    missing = [name for name in opcodes.NAMES.values() if "`%s`" % name not in page]
+    assert not missing, "تعليمات غير موثَّقة في صفحة المترجِم: %s" % "، ".join(missing)
+
+
 def test_every_page_is_in_the_navigation_and_every_link_resolves():
     config = _read(os.path.join(ROOT, "mkdocs.yml"))
     in_nav = set(re.findall(r":\s*([\w\-/]+\.md)\s*$", config, re.M))

@@ -115,5 +115,6 @@ nav:
       - إضافة VS Code: tools/vscode.md
   - من الداخل:
       - كيف يعمل المُفسِّر: internals/architecture.md
+      - المترجِم والآلة الافتراضية: internals/compiler.md
       - قرارات التصميم: internals/design.md
       - المساهمة: internals/contributing.md
