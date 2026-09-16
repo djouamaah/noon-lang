@@ -1,0 +1,312 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "نون",
+  "scopeName": "source.noon",
+  "fileTypes": [
+    "noon",
+    "نون"
+  ],
+  "_مولَّد": "لا تُحرِّر هذا الملف يدويًّا — أعِد توليده بـ tools/build_grammar.py",
+  "patterns": [
+    {
+      "include": "#comments"
+    },
+    {
+      "include": "#strings"
+    },
+    {
+      "include": "#numbers"
+    },
+    {
+      "include": "#declarations"
+    },
+    {
+      "include": "#keywords"
+    },
+    {
+      "include": "#constants"
+    },
+    {
+      "include": "#members"
+    },
+    {
+      "include": "#calls"
+    },
+    {
+      "include": "#operators"
+    },
+    {
+      "include": "#punctuation"
+    }
+  ],
+  "repository": {
+    "comments": {
+      "patterns": [
+        {
+          "name": "comment.line.number-sign.noon",
+          "begin": "#",
+          "end": "$",
+          "beginCaptures": {
+            "0": {
+              "name": "punctuation.definition.comment.noon"
+            }
+          }
+        }
+      ]
+    },
+    "strings": {
+      "patterns": [
+        {
+          "name": "string.quoted.double.noon",
+          "begin": "\"",
+          "end": "\"",
+          "beginCaptures": {
+            "0": {
+              "name": "punctuation.definition.string.begin.noon"
+            }
+          },
+          "endCaptures": {
+            "0": {
+              "name": "punctuation.definition.string.end.noon"
+            }
+          },
+          "patterns": [
+            {
+              "include": "#escapes"
+            }
+          ]
+        },
+        {
+          "name": "string.quoted.single.noon",
+          "begin": "'",
+          "end": "'",
+          "beginCaptures": {
+            "0": {
+              "name": "punctuation.definition.string.begin.noon"
+            }
+          },
+          "endCaptures": {
+            "0": {
+              "name": "punctuation.definition.string.end.noon"
+            }
+          },
+          "patterns": [
+            {
+              "include": "#escapes"
+            }
+          ]
+        }
+      ]
+    },
+    "escapes": {
+      "patterns": [
+        {
+          "name": "constant.character.escape.noon",
+          "match": "\\\\(?:u[0-9A-Fa-f]{4}|[nrt0\\\\\\\"'])"
+        }
+      ]
+    },
+    "numbers": {
+      "patterns": [
+        {
+          "name": "constant.numeric.noon",
+          "match": "(?<![\\p{L}\\p{N}_\\x{064B}-\\x{0655}\\x{0670}\\x{0640}])(?:[0-9\\x{0660}-\\x{0669}\\x{06F0}-\\x{06F9}][0-9\\x{0660}-\\x{0669}\\x{06F0}-\\x{06F9}\\x{066C}_]*(?:[.\\x{066B}][0-9\\x{0660}-\\x{0669}\\x{06F0}-\\x{06F9}]+)?)(?![\\p{L}\\p{N}_\\x{064B}-\\x{0655}\\x{0670}\\x{0640}])"
+        }
+      ]
+    },
+    "declarations": {
+      "patterns": [
+        {
+          "match": "(?<![\\p{L}\\p{N}_\\x{064B}-\\x{0655}\\x{0670}\\x{0640}])(صنف)\\s+([\\p{L}_][\\p{L}\\p{N}_\\x{064B}-\\x{0655}\\x{0670}\\x{0640}]*)(?:\\s+([يى]رث)\\s+([\\p{L}_][\\p{L}\\p{N}_\\x{064B}-\\x{0655}\\x{0670}\\x{0640}]*))?",
+          "captures": {
+            "1": {
+              "name": "storage.type.class.noon"
+            },
+            "2": {
+              "name": "entity.name.type.class.noon"
+            },
+            "3": {
+              "name": "storage.modifier.extends.noon"
+            },
+            "4": {
+              "name": "entity.other.inherited-class.noon"
+            }
+          }
+        },
+        {
+          "match": "(?<![\\p{L}\\p{N}_\\x{064B}-\\x{0655}\\x{0670}\\x{0640}])(د[اأإآٱ]ل[ةه])\\s+([\\p{L}_][\\p{L}\\p{N}_\\x{064B}-\\x{0655}\\x{0670}\\x{0640}]*)",
+          "captures": {
+            "1": {
+              "name": "storage.type.function.noon"
+            },
+            "2": {
+              "name": "entity.name.function.noon"
+            }
+          }
+        },
+        {
+          "match": "(?<![\\p{L}\\p{N}_\\x{064B}-\\x{0655}\\x{0670}\\x{0640}])(متغ[يى]ر|ث[اأإآٱ]بت)\\s+([\\p{L}_][\\p{L}\\p{N}_\\x{064B}-\\x{0655}\\x{0670}\\x{0640}]*)",
+          "captures": {
+            "1": {
+              "name": "storage.type.variable.noon"
+            },
+            "2": {
+              "name": "variable.other.declaration.noon"
+            }
+          }
+        },
+        {
+          "match": "(?<![\\p{L}\\p{N}_\\x{064B}-\\x{0655}\\x{0670}\\x{0640}])(لكل)\\s+([\\p{L}_][\\p{L}\\p{N}_\\x{064B}-\\x{0655}\\x{0670}\\x{0640}]*)\\s+(ف[يى])(?![\\p{L}\\p{N}_\\x{064B}-\\x{0655}\\x{0670}\\x{0640}])",
+          "captures": {
+            "1": {
+              "name": "keyword.control.loop.noon"
+            },
+            "2": {
+              "name": "variable.other.loop.noon"
+            },
+            "3": {
+              "name": "keyword.control.loop.noon"
+            }
+          }
+        }
+      ]
+    },
+    "keywords": {
+      "patterns": [
+        {
+          "name": "keyword.control.conditional.noon",
+          "match": "(?<![\\p{L}\\p{N}_\\x{064B}-\\x{0655}\\x{0670}\\x{0640}])(?:و[اأإآٱ]ل[اأإآٱ]|[اأإآٱ]ذ[اأإآٱ])(?![\\p{L}\\p{N}_\\x{064B}-\\x{0655}\\x{0670}\\x{0640}])"
+        },
+        {
+          "name": "keyword.control.loop.noon",
+          "match": "(?<![\\p{L}\\p{N}_\\x{064B}-\\x{0655}\\x{0670}\\x{0640}])(?:[اأإآٱ]ستمر|ط[اأإآٱ]لم[اأإآٱ]|توقف|لكل|ف[يى])(?![\\p{L}\\p{N}_\\x{064B}-\\x{0655}\\x{0670}\\x{0640}])"
+        },
+        {
+          "name": "keyword.control.flow.noon",
+          "match": "(?<![\\p{L}\\p{N}_\\x{064B}-\\x{0655}\\x{0670}\\x{0640}])(?:[اأإآٱ]خ[يى]رً[اأإآٱ]|[اأإآٱ]خ[يى]ر[اأإآٱ]|[اأإآٱ]رجع|[اأإآٱ]رمِ|[اأإآٱ]مسك|ح[اأإآٱ]ول|[اأإآٱ]رم)(?![\\p{L}\\p{N}_\\x{064B}-\\x{0655}\\x{0670}\\x{0640}])"
+        },
+        {
+          "name": "storage.type.noon",
+          "match": "(?<![\\p{L}\\p{N}_\\x{064B}-\\x{0655}\\x{0670}\\x{0640}])(?:متغ[يى]ر|ث[اأإآٱ]بت|د[اأإآٱ]ل[ةه]|صنف)(?![\\p{L}\\p{N}_\\x{064B}-\\x{0655}\\x{0670}\\x{0640}])"
+        },
+        {
+          "name": "storage.modifier.noon",
+          "match": "(?<![\\p{L}\\p{N}_\\x{064B}-\\x{0655}\\x{0670}\\x{0640}])(?:[يى]رث)(?![\\p{L}\\p{N}_\\x{064B}-\\x{0655}\\x{0670}\\x{0640}])"
+        },
+        {
+          "name": "keyword.operator.logical.noon",
+          "match": "(?<![\\p{L}\\p{N}_\\x{064B}-\\x{0655}\\x{0670}\\x{0640}])(?:ل[يى]س|[اأإآٱ]و|و)(?![\\p{L}\\p{N}_\\x{064B}-\\x{0655}\\x{0670}\\x{0640}])"
+        }
+      ]
+    },
+    "constants": {
+      "patterns": [
+        {
+          "name": "constant.language.noon",
+          "match": "(?<![\\p{L}\\p{N}_\\x{064B}-\\x{0655}\\x{0670}\\x{0640}])(?:صح[يى]ح|خط[اأإآٱ]|عدم)(?![\\p{L}\\p{N}_\\x{064B}-\\x{0655}\\x{0670}\\x{0640}])"
+        },
+        {
+          "name": "variable.language.noon",
+          "match": "(?<![\\p{L}\\p{N}_\\x{064B}-\\x{0655}\\x{0670}\\x{0640}])(?:[اأإآٱ]ل[اأإآٱ]صل|[ةه]ذ[اأإآٱ])(?![\\p{L}\\p{N}_\\x{064B}-\\x{0655}\\x{0670}\\x{0640}])"
+        },
+        {
+          "name": "constant.language.pi.noon",
+          "match": "(?<![\\p{L}\\p{N}_\\x{064B}-\\x{0655}\\x{0670}\\x{0640}])ب[اأإآٱ][يى](?![\\p{L}\\p{N}_\\x{064B}-\\x{0655}\\x{0670}\\x{0640}])"
+        }
+      ]
+    },
+    "members": {
+      "patterns": [
+        {
+          "match": "(\\.)\\s*((?:[اأإآٱ]ستبدل|مف[اأإآٱ]ت[يى]ح|[اأإآٱ]در[اأإآٱ]ج|[اأإآٱ]در[اأإآٱ]ج|تقس[يى]م|تكر[اأإآٱ]ر|عن[اأإآٱ]صر|[يى]حتو[يى]|[يى]نت[ةه][يى]|[اأإآٱ]حرف|[اأإآٱ]جلب|[اأإآٱ]حذف|[اأإآٱ]حرف|[اأإآٱ]دمج|صغ[يى]ر|كب[يى]ر|مقطع|موضع|نسخ[ةه]|نسخ[ةه]|[يى]بد[اأإآٱ]|[يى]بد[اأإآٱ]|[اأإآٱ]ضف|[اأإآٱ]ضف|طول|عكس|فرز|ق[يى]م|مسح|وصل|ضع|قص))(?![\\p{L}\\p{N}_\\x{064B}-\\x{0655}\\x{0670}\\x{0640}])\\s*(?=\\()",
+          "captures": {
+            "1": {
+              "name": "punctuation.accessor.noon"
+            },
+            "2": {
+              "name": "support.function.method.noon"
+            }
+          }
+        },
+        {
+          "match": "(\\.)\\s*([\\p{L}_][\\p{L}\\p{N}_\\x{064B}-\\x{0655}\\x{0670}\\x{0640}]*)\\s*(?=\\()",
+          "captures": {
+            "1": {
+              "name": "punctuation.accessor.noon"
+            },
+            "2": {
+              "name": "entity.name.function.member.noon"
+            }
+          }
+        },
+        {
+          "match": "(\\.)\\s*([\\p{L}_][\\p{L}\\p{N}_\\x{064B}-\\x{0655}\\x{0670}\\x{0640}]*)",
+          "captures": {
+            "1": {
+              "name": "punctuation.accessor.noon"
+            },
+            "2": {
+              "name": "variable.other.property.noon"
+            }
+          }
+        }
+      ]
+    },
+    "calls": {
+      "patterns": [
+        {
+          "name": "support.function.builtin.noon",
+          "match": "(?<![\\p{L}\\p{N}_\\x{064B}-\\x{0655}\\x{0670}\\x{0640}])(?:[اأإآٱ]رق[اأإآٱ]م_عرب[يى][ةه]|[اأإآٱ]رق[اأإآٱ]م_عرب[يى][ةه]|متس[اأإآٱ]و[يى][اأإآٱ]ن|عشو[اأإآٱ]ئ[يى]|من_صنف|[اأإآٱ]رض[يى][ةه]|[اأإآٱ]ختزل|[اأإآٱ]رض[يى][ةه]|تحقّق|تقر[يى]ب|ق[اأإآٱ]ئم[ةه]|ق[اأإآٱ]ئم[ةه]|مجموع|منطق[يى]|[اأإآٱ]دن[يى]|[اأإآٱ]قص[يى]|[اأإآٱ]دن[يى]|[اأإآٱ]طبع|[اأإآٱ]قر[اأإآٱ]|[اأإآٱ]قر[اأإآٱ]|[اأإآٱ]قص[يى]|تحقق|رشّح|طبّق|مطلق|جذر|رشح|سقف|طبق|طول|عدد|عكس|فرز|مد[يى]|مد[يى]|نوع|وقت|نص)(?![\\p{L}\\p{N}_\\x{064B}-\\x{0655}\\x{0670}\\x{0640}])"
+        },
+        {
+          "name": "entity.name.function.call.noon",
+          "match": "(?<![\\p{L}\\p{N}_\\x{064B}-\\x{0655}\\x{0670}\\x{0640}])[\\p{L}_][\\p{L}\\p{N}_\\x{064B}-\\x{0655}\\x{0670}\\x{0640}]*(?=\\s*\\()"
+        }
+      ]
+    },
+    "operators": {
+      "patterns": [
+        {
+          "name": "keyword.operator.assignment.noon",
+          "match": "\\+=|-=|\\*=|/=|="
+        },
+        {
+          "name": "keyword.operator.comparison.noon",
+          "match": "==|!=|<=|>=|<|>"
+        },
+        {
+          "name": "keyword.operator.logical.noon",
+          "match": "&&|\\|\\||!"
+        },
+        {
+          "name": "keyword.operator.arithmetic.noon",
+          "match": "\\*\\*|//|[+\\-*/%]"
+        }
+      ]
+    },
+    "punctuation": {
+      "patterns": [
+        {
+          "name": "punctuation.separator.noon",
+          "match": "[,،:]"
+        },
+        {
+          "name": "punctuation.terminator.noon",
+          "match": "[;؛]"
+        },
+        {
+          "name": "punctuation.section.braces.noon",
+          "match": "[{}]"
+        },
+        {
+          "name": "punctuation.section.brackets.noon",
+          "match": "[\\[\\]]"
+        },
+        {
+          "name": "punctuation.section.parens.noon",
+          "match": "[()]"
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,42 @@
+{
+  "comments": { "lineComment": "#" },
+
+  "brackets": [["{", "}"], ["[", "]"], ["(", ")"]],
+
+  "autoClosingPairs": [
+    { "open": "{", "close": "}" },
+    { "open": "[", "close": "]" },
+    { "open": "(", "close": ")" },
+    { "open": "\"", "close": "\"", "notIn": ["string", "comment"] },
+    { "open": "'", "close": "'", "notIn": ["string", "comment"] },
+    { "open": "«", "close": "»", "notIn": ["string", "comment"] }
+  ],
+
+  "surroundingPairs": [
+    ["{", "}"], ["[", "]"], ["(", ")"],
+    ["\"", "\""], ["'", "'"], ["«", "»"]
+  ],
+
+  "//": "حروف الاسم: العربية وتشكيلها وأرقامها، واللاتينية — ليختار النقر المزدوج الكلمة كاملة",
+  "wordPattern": "[\\u0621-\\u064A\\u066E-\\u06D3\\u0640\\u064B-\\u0655\\u0670\\u0660-\\u0669\\u06F0-\\u06F9A-Za-z0-9_]+",
+
+  "indentationRules": {
+    "increaseIndentPattern": "\\{[^}\"']*$",
+    "decreaseIndentPattern": "^\\s*\\}"
+  },
+
+  "onEnterRules": [
+    {
+      "beforeText": "\\{\\s*$",
+      "afterText": "^\\s*\\}",
+      "action": { "indent": "indentOutdent" }
+    }
+  ],
+
+  "folding": {
+    "markers": {
+      "start": "^\\s*#\\s*منطقة\\b|^\\s*#\\s*region\\b",
+      "end": "^\\s*#\\s*نهاية\\b|^\\s*#\\s*endregion\\b"
+    }
+  }
+}

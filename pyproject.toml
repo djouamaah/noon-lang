@@ -1,0 +1,19 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "noon-lang"
+version = "1.0.0"
+description = "نون — an Arabic-syntax programming language with a tree-walking interpreter"
+readme = "README.md"
+requires-python = ">=3.8"
+license = { text = "MIT" }
+authors = [{ name = "Djouamaa Hocine" }]
+keywords = ["arabic", "programming-language", "interpreter", "noon"]
+
+[project.scripts]
+noon = "noon.cli:main"
+
+[tool.setuptools]
+packages = ["noon"]

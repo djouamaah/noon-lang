@@ -1,0 +1,56 @@
+# -*- coding: utf-8 -*-
+"""أخطاء لغة «نون» وإشارات التحكّم في التدفّق."""
+
+
+class NoonError(Exception):
+    """الأصل لكل أخطاء اللغة التي تُعرض للمستخدم."""
+
+    kind = "خطأ"
+
+    def __init__(self, message, line=None, col=None):
+        super().__init__(message)
+        self.message = message
+        self.line = line
+        self.col = col
+
+    def __str__(self):
+        if self.line:
+            return "%s [سطر %d]: %s" % (self.kind, self.line, self.message)
+        return "%s: %s" % (self.kind, self.message)
+
+
+class NoonSyntaxError(NoonError):
+    """خطأ في صياغة الشيفرة، يُكتشف قبل التشغيل."""
+
+    kind = "خطأ نحوي"
+
+
+class NoonRuntimeError(NoonError):
+    """خطأ أثناء التنفيذ."""
+
+    kind = "خطأ تشغيل"
+
+
+class NoonThrow(Exception):
+    """قيمة مرميّة بالأمر «ارمِ»، تلتقطها «امسك»."""
+
+    def __init__(self, value, line=None):
+        super().__init__("قيمة مرميّة")
+        self.value = value
+        self.line = line
+
+
+# ——— إشارات التحكّم في التدفّق (ليست أخطاء) ———
+
+class BreakSignal(Exception):
+    pass
+
+
+class ContinueSignal(Exception):
+    pass
+
+
+class ReturnSignal(Exception):
+    def __init__(self, value):
+        super().__init__("أرجع")
+        self.value = value

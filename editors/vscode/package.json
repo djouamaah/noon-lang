@@ -1,0 +1,41 @@
+{
+  "name": "noon-lang",
+  "displayName": "نون — Noon language",
+  "description": "تلوين صيغة لغة «نون» العربية ومقاطعها الجاهزة (Arabic programming language support)",
+  "version": "1.0.0",
+  "publisher": "noon-lang",
+  "license": "MIT",
+  "engines": { "vscode": "^1.60.0" },
+  "categories": ["Programming Languages", "Snippets"],
+  "keywords": ["noon", "نون", "arabic", "عربية", "rtl"],
+  "contributes": {
+    "languages": [
+      {
+        "id": "noon",
+        "aliases": ["نون", "Noon"],
+        "extensions": [".noon", ".نون"],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "noon",
+        "scopeName": "source.noon",
+        "path": "./syntaxes/noon.tmLanguage.json"
+      }
+    ],
+    "snippets": [
+      {
+        "language": "noon",
+        "path": "./snippets/noon.code-snippets"
+      }
+    ],
+    "configurationDefaults": {
+      "[noon]": {
+        "editor.tabSize": 4,
+        "editor.insertSpaces": true,
+        "editor.wordSeparators": "`~!@#$%^&*()-=+[{]}\\|;:'\",.<>/?،؛؟«»"
+      }
+    }
+  }
+}
