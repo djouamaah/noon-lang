@@ -10,6 +10,12 @@ copyright: رخصة MIT · Djouamaa Hocine
 docs_dir: docs
 strict: true
 
+# runner.py يُحزَم في noon.zip فلا حاجة إلى نسخته المفردة، وذاكرة Python
+# المؤقتة تنشأ حين تستورده الاختبارات قبل البناء
+exclude_docs: |
+  __pycache__/
+  playground/runner.py
+
 # روابط #مرساة مكسورة تُفشل البناء (الافتراض أن تمرّ بمعلومة لا يقرؤها أحد)
 validation:
   anchors: warn
