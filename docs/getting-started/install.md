@@ -45,6 +45,13 @@ python noon.py مرحبا.noon
     python noon.py -c 'اطبع(٢ ** ١٠)'
     ```
 
+    في **Windows PowerShell 5.1** تُحذف علامات الاقتباس المزدوجة من داخل الوسيط
+    قبل أن تصل إلى البرنامج، فاستعمل المفردة داخل الشيفرة:
+
+    ```powershell
+    python noon.py -c "اطبع('مرحبًا')"
+    ```
+
 === "من الدخل القياسي"
 
     ```bash
@@ -70,6 +77,30 @@ pip install -e .
 ```bash
 noon مرحبا.noon
 ```
+
+!!! warning "ويندوز: «noon is not recognized»"
+    إن لم يكن لديك صلاحية المدير، يثبّت pip الأمر في مجلّد مستخدمك
+    (`%APPDATA%\Python\Python3XX\Scripts`) لا في مجلّد Python العام، وهذا المجلّد
+    ليس في `PATH` غالبًا، فيقول PowerShell:
+
+    ```text
+    noon : The term 'noon' is not recognized as the name of a cmdlet...
+    ```
+
+    **حلّ فوري** بلا تغيير شيء:
+
+    ```powershell
+    python -m noon .\مرحبا.noon
+    ```
+
+    **حلّ دائم**: أضِف مجلّد الأوامر إلى `PATH` مستخدمك (لا يحتاج صلاحية المدير):
+
+    ```powershell
+    $scripts = python -c "import sysconfig; print(sysconfig.get_path('scripts', 'nt_user'))"
+    [Environment]::SetEnvironmentVariable("Path", [Environment]::GetEnvironmentVariable("Path", "User") + ";$scripts", "User")
+    ```
+
+    ثم **أغلق الطرفية وافتح غيرها**: الطرفية المفتوحة لا تقرأ `PATH` الجديد.
 
 ## الخطوة التالية
 
