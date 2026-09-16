@@ -103,6 +103,7 @@ def build():
             {"include": "#declarations"},
             {"include": "#keywords"},
             {"include": "#constants"},
+            {"include": "#methods"},
             {"include": "#members"},
             {"include": "#calls"},
             {"include": "#operators"},
@@ -226,6 +227,15 @@ def build():
                 ],
             },
 
+            "methods": {
+                "patterns": [{
+                    # داخل الصنف كلمة «دالة» اختيارية: تهيئة(اسم) {  و  نص() {
+                    # بعد الكلمات المفتاحية حتى تبقى «إذا (س) {» شرطًا لا تابعًا
+                    "name": "entity.name.function.method.noon",
+                    "match": r"%s%s(?=\s*\([^()]*\)\s*\{)" % (BEFORE, IDENT),
+                }],
+            },
+
             "members": {
                 "patterns": [
                     {
@@ -265,10 +275,11 @@ def build():
 
             "operators": {
                 "patterns": [
-                    {"name": "keyword.operator.assignment.noon",
-                     "match": r"\+=|-=|\*=|/=|="},
+                    # المقارنة قبل الإسناد، وإلا صارت «==» علامتَي إسناد
                     {"name": "keyword.operator.comparison.noon",
                      "match": r"==|!=|<=|>=|<|>"},
+                    {"name": "keyword.operator.assignment.noon",
+                     "match": r"\+=|-=|\*=|/=|="},
                     {"name": "keyword.operator.logical.noon", "match": r"&&|\|\||!"},
                     {"name": "keyword.operator.arithmetic.noon",
                      "match": r"\*\*|//|[+\-*/%]"},

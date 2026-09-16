@@ -490,6 +490,27 @@ def test_vscode_grammar_numbers_and_builtins():
     assert not builtins_rule.fullmatch("اطبعوا")
 
 
+def test_vscode_grammar_colours_whole_tokens():
+    if not _has_regex_engine():
+        return
+    sys.path.insert(0, os.path.join(ROOT, "tools"))
+    from preview_highlight import load_rules, tokenize_line
+
+    rules = load_rules()
+
+    def scopes(line):
+        return [(text, scope) for text, scope in tokenize_line(line, rules) if text.strip()]
+
+    # «==» مقارنة واحدة، لا علامتا إسناد
+    assert ("==", "keyword.operator.comparison.noon") in scopes("إذا (س == ٠) {")
+
+    # تابع داخل صنف بلا «دالة» تعريفٌ لا نداء، حتى لو حمل اسم دالة مدمجة
+    for line, name in (("تهيئة(اسم) {", "تهيئة"), ("نص() {", "نص")):
+        assert scopes(line)[0] == (name, "entity.name.function.method.noon"), line
+    assert scopes("إذا (س) {")[0][1] == "keyword.control.conditional.noon"
+    assert scopes("اطبع(س)")[0][1] == "support.function.builtin.noon"
+
+
 def test_vscode_manifest_points_at_real_files():
     manifest = _json(os.path.join(VSCODE, "package.json"))
     contributes = manifest["contributes"]

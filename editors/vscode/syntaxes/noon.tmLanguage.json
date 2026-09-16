@@ -27,6 +27,9 @@
       "include": "#constants"
     },
     {
+      "include": "#methods"
+    },
+    {
       "include": "#members"
     },
     {
@@ -215,6 +218,14 @@
         }
       ]
     },
+    "methods": {
+      "patterns": [
+        {
+          "name": "entity.name.function.method.noon",
+          "match": "(?<![\\p{L}\\p{N}_\\x{064B}-\\x{0655}\\x{0670}\\x{0640}])[\\p{L}_][\\p{L}\\p{N}_\\x{064B}-\\x{0655}\\x{0670}\\x{0640}]*(?=\\s*\\([^()]*\\)\\s*\\{)"
+        }
+      ]
+    },
     "members": {
       "patterns": [
         {
@@ -267,12 +278,12 @@
     "operators": {
       "patterns": [
         {
-          "name": "keyword.operator.assignment.noon",
-          "match": "\\+=|-=|\\*=|/=|="
-        },
-        {
           "name": "keyword.operator.comparison.noon",
           "match": "==|!=|<=|>=|<|>"
+        },
+        {
+          "name": "keyword.operator.assignment.noon",
+          "match": "\\+=|-=|\\*=|/=|="
         },
         {
           "name": "keyword.operator.logical.noon",
