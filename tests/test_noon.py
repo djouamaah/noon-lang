@@ -17,17 +17,22 @@ from noon import values  # noqa: E402
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
+# المحرّك الذي تُشغَّل به الاختبارات؛ `test_vm.py` يستبدله بالآلة الافتراضية
+# ليمرّ المحرّكان بالاختبارات نفسها.
+ENGINE = Interpreter
+
+
 def out(source):
     """ينفّذ الشيفرة ويُرجع ما طُبع."""
     buffer = io.StringIO()
-    Interpreter(out=buffer).run(source)
+    ENGINE(out=buffer).run(source)
     return buffer.getvalue()
 
 
 def val(expression):
     """يُرجع قيمة تعبير واحد."""
     buffer = io.StringIO()
-    return Interpreter(out=buffer).run(expression, repl=True)
+    return ENGINE(out=buffer).run(expression, repl=True)
 
 
 def fails(source, kind=NoonError):
@@ -100,6 +105,8 @@ def test_comparison_and_equality_are_strict():
     assert val("عدم == عدم") is True
     assert val('"ا" < "ب"') is True
     assert val("[١، ٢] == [١، ٢]") is True
+    assert val("١ == ١٫٠") is True
+    assert val("٢ ** ٦٠ + ١ == ٢ ** ٦٠") is False   # لا يُحوَّل الصحيح الكبير إلى عشري
     fails("١ < \"ا\"", NoonRuntimeError)
 
 
@@ -383,7 +390,7 @@ def test_all_examples_run():
         with io.open(os.path.join(folder, name), encoding="utf-8") as handle:
             source = handle.read()
         buffer = io.StringIO()
-        Interpreter(out=buffer).run(source)
+        ENGINE(out=buffer).run(source)
         assert buffer.getvalue().strip(), "المثال %s لم يطبع شيئًا" % name
 
 

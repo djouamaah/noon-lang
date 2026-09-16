@@ -33,6 +33,58 @@ class NoonFunction:
         return "<دالة %s>" % self.name
 
 
+class Cell:
+    """صندوق لمتغيّر التقطته دالة داخلية، فيراه الاثنان ويتغيّر للاثنين."""
+
+    __slots__ = ("value",)
+
+    def __init__(self, value=None):
+        self.value = value
+
+    def __repr__(self):
+        return "<خليّة %r>" % (self.value,)
+
+
+class Closure:
+    """دالة مُترجَمة مع خلاياها الملتقَطة — نظير NoonFunction في الآلة الافتراضية."""
+
+    __slots__ = ("function", "cells", "owner")
+
+    def __init__(self, function, cells=(), owner=None):
+        self.function = function
+        self.cells = cells
+        self.owner = owner            # الصنف الذي عُرِّف فيه التابع، لأجل «الأصل»
+
+    @property
+    def name(self):
+        return self.function.name
+
+    def bind(self, instance, klass):
+        """يربط التابع بكائن: `هذا` هو الوسيط الأول عند الاستدعاء."""
+        return BoundMethod(self, instance, klass)
+
+    def __repr__(self):
+        return "<دالة %s>" % self.function.name
+
+
+class BoundMethod:
+    """تابع مربوط بكائن؛ يمرّر الكائن وسيطًا أوّل عند النداء."""
+
+    __slots__ = ("closure", "instance", "owner")
+
+    def __init__(self, closure, instance, owner):
+        self.closure = closure
+        self.instance = instance
+        self.owner = owner
+
+    @property
+    def name(self):
+        return self.closure.function.name
+
+    def __repr__(self):
+        return "<تابع %s>" % self.name
+
+
 class BuiltinFunction:
     """دالة مدمجة مكتوبة بـ Python. توقيعها: fn(interp, args, line)."""
 
@@ -128,7 +180,8 @@ class SuperProxy:
         return method.bind(self.instance, owner)
 
 
-CALLABLES = (NoonFunction, BuiltinFunction, BoundBuiltin, NoonClass)
+CALLABLES = (NoonFunction, BuiltinFunction, BoundBuiltin, NoonClass,
+             Closure, BoundMethod)
 
 
 # ——————————————————— أدوات على القيم ———————————————————
@@ -170,7 +223,8 @@ def type_name(value):
         return "صنف"
     if isinstance(value, NoonInstance):
         return value.klass.name
-    if isinstance(value, (NoonFunction, BuiltinFunction, BoundBuiltin)):
+    if isinstance(value, (NoonFunction, BuiltinFunction, BoundBuiltin,
+                          Closure, BoundMethod)):
         return "دالة"
     return "غير معروف"
 
@@ -235,7 +289,7 @@ def equals(a, b):
     if a is None or b is None:
         return a is None and b is None
     if is_number(a) and is_number(b):
-        return float(a) == float(b)
+        return a == b              # مقارنة بايثون بين int وfloat دقيقة؛ float() كانت تُضيّع الأعداد الكبيرة
     if type(a) is not type(b):
         return False
     if isinstance(a, list):

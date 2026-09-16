@@ -43,14 +43,27 @@ class NoonThrow(Exception):
 # ——— إشارات التحكّم في التدفّق (ليست أخطاء) ———
 
 class BreakSignal(Exception):
-    pass
+    def __init__(self, line=None):
+        super().__init__("توقف")
+        self.line = line
 
 
 class ContinueSignal(Exception):
-    pass
+    def __init__(self, line=None):
+        super().__init__("استمر")
+        self.line = line
 
 
 class ReturnSignal(Exception):
-    def __init__(self, value):
+    def __init__(self, value, line=None):
         super().__init__("أرجع")
         self.value = value
+        self.line = line
+
+
+# رسائل استعمال هذه الكلمات في غير موضعها؛ يتقاسمها المحرّكان
+MISPLACED = {
+    "break": "«توقف» لا تُستعمل إلا داخل حلقة",
+    "continue": "«استمر» لا تُستعمل إلا داخل حلقة",
+    "return": "«أرجع» لا تُستعمل إلا داخل دالة",
+}

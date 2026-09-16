@@ -5,8 +5,8 @@ import sys
 
 from . import ast_nodes as A
 from . import builtins as B
-from .errors import (BreakSignal, ContinueSignal, NoonRuntimeError, NoonThrow,
-                     ReturnSignal)
+from .errors import (MISPLACED, BreakSignal, ContinueSignal, NoonRuntimeError,
+                     NoonThrow, ReturnSignal)
 from .parser import parse
 from .runtime import INIT_METHOD, Runtime
 from .values import (BoundBuiltin, BuiltinFunction, NoonClass, NoonFunction,
@@ -80,12 +80,19 @@ class Interpreter(Runtime):
 
     def execute_program(self, program, repl=False):
         last = None
-        for statement in program.body:
-            if repl and isinstance(statement, A.ExprStmt):
-                last = self.evaluate(statement.expr)
-            else:
-                self.execute(statement)
-                last = None
+        try:
+            for statement in program.body:
+                if repl and isinstance(statement, A.ExprStmt):
+                    last = self.evaluate(statement.expr)
+                else:
+                    self.execute(statement)
+                    last = None
+        except BreakSignal as signal:
+            raise NoonRuntimeError(MISPLACED["break"], signal.line)
+        except ContinueSignal as signal:
+            raise NoonRuntimeError(MISPLACED["continue"], signal.line)
+        except ReturnSignal as signal:
+            raise NoonRuntimeError(MISPLACED["return"], signal.line)
         return last
 
     # ——————————— الإرسال ———————————
@@ -187,13 +194,13 @@ class Interpreter(Runtime):
 
     def exec_Return(self, node):
         value = self.evaluate(node.value) if node.value is not None else None
-        raise ReturnSignal(value)
+        raise ReturnSignal(value, node.line)
 
     def exec_Break(self, node):
-        raise BreakSignal()
+        raise BreakSignal(node.line)
 
     def exec_Continue(self, node):
-        raise ContinueSignal()
+        raise ContinueSignal(node.line)
 
     def exec_ClassDecl(self, node):
         parent = None
@@ -381,6 +388,10 @@ class Interpreter(Runtime):
             self.execute_block(function.body.body, env)
         except ReturnSignal as signal:
             return signal.value
+        except BreakSignal as signal:           # لا تعبر «توقف» حدود الدالة
+            raise NoonRuntimeError(MISPLACED["break"], signal.line)
+        except ContinueSignal as signal:
+            raise NoonRuntimeError(MISPLACED["continue"], signal.line)
         except RecursionError:
             raise NoonRuntimeError(
                 "تجاوز عمق الاستدعاء (تعاود لا ينتهي؟) في «%s»" % function.name,

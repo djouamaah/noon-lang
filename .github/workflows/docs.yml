@@ -34,6 +34,9 @@ jobs:
       - name: Language tests
         run: python tests/test_noon.py
 
+      - name: Compiler and VM tests (identical to the interpreter everywhere)
+        run: python tests/test_vm.py
+
       - name: Docs tests (every example runs, every output matches)
         run: python tests/test_docs.py
 
