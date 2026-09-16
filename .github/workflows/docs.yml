@@ -40,6 +40,9 @@ jobs:
       - name: Docs tests (every example runs, every output matches)
         run: python tests/test_docs.py
 
+      - name: Playground tests (runner, browser bundle, share links)
+        run: python tests/test_playground.py
+
       - name: Grammar is up to date
         run: python tools/build_grammar.py --check
 

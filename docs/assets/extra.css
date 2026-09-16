@@ -99,3 +99,37 @@
     font-size: 2rem;
   }
 }
+
+/* ——— رابط «جرّبها» تحت كل كتلة شيفرة ——— */
+.md-typeset .noon-code {
+  position: relative;
+}
+
+.md-typeset .noon-try {
+  position: absolute;
+  bottom: 0.45em;
+  left: 0.6em;
+  padding: 0.15em 0.7em;
+  border-radius: 999px;
+  font-size: 0.62rem;
+  font-weight: 600;
+  line-height: 1.6;
+  color: var(--md-primary-fg-color);
+  background: var(--md-default-bg-color);
+  border: 1px solid var(--md-default-fg-color--lightest);
+  opacity: 0;
+  transition: opacity 120ms ease;
+}
+
+.md-typeset .noon-code:hover .noon-try,
+.md-typeset .noon-try:focus-visible {
+  opacity: 1;
+}
+
+@media (hover: none) {
+  .md-typeset .noon-try { opacity: 1; }
+}
+
+[data-md-color-scheme="slate"] .md-typeset .noon-try {
+  color: var(--md-typeset-a-color);
+}

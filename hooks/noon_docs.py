@@ -9,16 +9,25 @@
 2. يعرض كتل ```output «ناتجًا» تحت المثال.
 3. يستبدل `<!-- مثال: hello.noon -->` بشيفرة المثال من `examples/` وبناتجه
    الفعلي بعد تشغيله وقت البناء.
+4. يبني ملفات ساحة التجربة بعد بناء الموقع: حزمة `noon` نفسها في noon.zip
+   (تشغّلها الصفحة بـ Pyodide)، وبيانات التلوين، والأمثلة؛ ويضع تحت كل كتلة
+   ```noon رابطًا يفتحها في الساحة.
 
 وتتحقّق `tests/test_docs.py` أن كل كتلة ```noon تُحلَّل، وأن كل ناتج مكتوب
-يطابق ناتج التشغيل الحقيقي.
+يطابق ناتج التشغيل الحقيقي؛ و`tests/test_playground.py` تختبر الساحة.
 """
 
+import base64
+import glob
 import html
 import io
+import json
 import os
 import re
 import sys
+import zipfile
+import zlib
+from urllib.parse import urlparse
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 for path in (ROOT, os.path.join(ROOT, "tools")):
@@ -117,11 +126,92 @@ def run_program(source):
     return buffer.getvalue()
 
 
+# ——— ساحة التجربة ———
+
+PLAYGROUND_DIR = "playground"
+_playground_url = "/%s/" % PLAYGROUND_DIR      # يُضبط من site_url في on_config
+
+
+def encode_share(code):
+    """الشيفرة ← جزء الرابط بعد #code=: ضغط deflate خام ثم base64 آمن للروابط.
+
+    الصفحة تفكّه بـ DecompressionStream("deflate-raw")، فالصيغتان متطابقتان.
+    """
+    compressor = zlib.compressobj(9, zlib.DEFLATED, -15)
+    raw = compressor.compress(code.encode("utf-8")) + compressor.flush()
+    return base64.urlsafe_b64encode(raw).decode("ascii").rstrip("=")
+
+
+def decode_share(token):
+    padded = token + "=" * (-len(token) % 4)
+    return zlib.decompress(base64.urlsafe_b64decode(padded), -15).decode("utf-8")
+
+
+def _first_comment(source):
+    for line in source.splitlines():
+        stripped = line.strip()
+        if stripped.startswith("#"):
+            return stripped.lstrip("#").strip()
+        if stripped:
+            break
+    return None
+
+
+def playground_files():
+    """اسم الملف ← محتواه (بايتات) لكل ما تحتاجه الساحة ولا يُكتب يدويًّا."""
+    from noon import builtins as B
+    from noon.lexer import KEYWORDS
+
+    files = {}
+
+    archive = io.BytesIO()
+    with zipfile.ZipFile(archive, "w", zipfile.ZIP_DEFLATED) as bundle:
+        for path in sorted(glob.glob(os.path.join(ROOT, "noon", "*.py"))):
+            bundle.write(path, "noon/" + os.path.basename(path))
+        bundle.write(os.path.join(ROOT, "docs", PLAYGROUND_DIR, "runner.py"), "runner.py")
+    files["noon.zip"] = archive.getvalue()
+
+    language = {
+        "keywords": KEYWORDS,                     # مفاتيحها موحَّدة الهمزات
+        "builtins": sorted(name for name in B.GLOBALS if name != "باي"),
+        "constants": ["باي"],
+        "methods": sorted(set(B.STRING_METHODS) | set(B.LIST_METHODS) | set(B.DICT_METHODS)),
+    }
+    files["language.js"] = (
+        "// مولَّد من noon/lexer.py وnoon/builtins.py عند بناء الموقع؛ لا تحرّره.\n"
+        "export default %s;\n" % json.dumps(language, ensure_ascii=False, indent=1)
+    ).encode("utf-8")
+
+    examples = []
+    for path in sorted(glob.glob(os.path.join(ROOT, "examples", "*.noon"))):
+        with io.open(path, encoding="utf-8") as handle:
+            source = handle.read()
+        name = os.path.splitext(os.path.basename(path))[0]
+        examples.append({"name": name, "title": _first_comment(source) or name,
+                         "code": source})
+    files["examples.js"] = (
+        "// مولَّد من examples/*.noon عند بناء الموقع؛ لا تحرّره.\n"
+        "export default %s;\n" % json.dumps(examples, ensure_ascii=False, indent=1)
+    ).encode("utf-8")
+    return files
+
+
+def on_post_build(config, **kwargs):
+    target = os.path.join(config["site_dir"], PLAYGROUND_DIR)
+    os.makedirs(target, exist_ok=True)
+    for name, data in playground_files().items():
+        with open(os.path.join(target, name), "wb") as handle:
+            handle.write(data)
+
+
 # ——— منسِّقات superfences ———
 
 def format_noon(src, language, class_name, options, md, **kwargs):
+    code = src.rstrip("\n")
+    link = '<a class="noon-try" href="%s#code=%s" title="افتح هذه الشيفرة في ساحة التجربة">جرّبها ▸</a>' % (
+        html.escape(_playground_url), encode_share(code))
     return ('<div class="language-noon highlight noon-code"><pre><span></span>'
-            '<code>%s</code></pre></div>' % highlight(src))
+            '<code>%s</code></pre>%s</div>' % (highlight(src), link))
 
 
 def format_output(src, language, class_name, options, md, **kwargs):
@@ -133,6 +223,10 @@ def format_output(src, language, class_name, options, md, **kwargs):
 # ——— خطّافات MkDocs ———
 
 def on_config(config, **kwargs):
+    global _playground_url
+    base = urlparse(config.get("site_url") or "/").path or "/"
+    _playground_url = base.rstrip("/") + "/" + PLAYGROUND_DIR + "/"
+
     fences = config["mdx_configs"].setdefault("pymdownx.superfences", {})
     custom = [f for f in fences.get("custom_fences", [])
               if f.get("name") not in ("noon", "output")]

@@ -2,6 +2,8 @@ __pycache__/
 *.pyc
 *.vsix
 *.html
+# ما سبق لمعاينات التلوين المولَّدة؛ صفحة ساحة التجربة مصدر لا ناتج
+!docs/playground/index.html
 .vscode/
 site/
 *.egg-info/

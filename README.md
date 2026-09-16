@@ -6,6 +6,7 @@
 يُعطي الناتج نفسه، كلاهما بـ Python في نحو ٤٢٠٠ سطر بلا أي اعتماديات خارجية.
 
 📖 **التوثيق الكامل: [djouamaah.github.io/noon-lang](https://djouamaah.github.io/noon-lang/)**
+▶️ **جرّبها في المتصفّح بلا تثبيت: [ساحة التجربة](https://djouamaah.github.io/noon-lang/playground/)**
 
 ```noon
 دالة مضروب(ع) {
@@ -337,6 +338,7 @@ python tools/preview_highlight.py examples/shapes.noon -o معاينة.html
 python tests/test_noon.py     # اللغة والأمثلة وقواعد التلوين
 python tests/test_vm.py       # المترجِم والآلة يطابقان المُفسِّر في كل شيء
 python tests/test_docs.py     # كل مثال في التوثيق يعمل وناتجه المكتوب حقيقي
+python tests/test_playground.py  # ساحة التجربة: التشغيل، وحزمة المتصفّح، وروابط المشاركة
 ```
 
 ولقياس السرعة: `python tools/benchmark.py`.

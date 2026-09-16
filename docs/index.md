@@ -10,7 +10,8 @@ hide:
 
 <p class="noon-tagline">لغة برمجة كاملة بصيغة عربية: كلماتها ودوالّها ورسائل أخطائها عربية، وأرقامها العربية واللاتينية سواء. مُفسِّرها مكتوب بـ Python بلا أي اعتماديات.</p>
 
-[ابدأ في دقيقتين](getting-started/install.md){ .md-button .md-button--primary }
+[جرّبها في المتصفّح](playground/index.html){ .md-button .md-button--primary }
+[ابدأ في دقيقتين](getting-started/install.md){ .md-button }
 [دليل اللغة](guide/values.md){ .md-button }
 [المصدر على GitHub](https://github.com/djouamaah/noon-lang){ .md-button }
 
