@@ -1,0 +1,119 @@
+site_name: نون
+site_description: لغة برمجة عربية — التوثيق الرسمي
+site_url: https://djouamaah.github.io/noon-lang/
+site_author: Djouamaa Hocine
+repo_url: https://github.com/djouamaah/noon-lang
+repo_name: djouamaah/noon-lang
+edit_uri: edit/main/docs/
+copyright: رخصة MIT · Djouamaa Hocine
+
+docs_dir: docs
+strict: true
+
+# روابط #مرساة مكسورة تُفشل البناء (الافتراض أن تمرّ بمعلومة لا يقرؤها أحد)
+validation:
+  anchors: warn
+
+theme:
+  name: material
+  language: ar                  # يجعل الاتجاه من اليمين إلى اليسار
+  logo: assets/logo.svg
+  favicon: assets/logo.svg
+  font:
+    text: IBM Plex Sans Arabic
+    code: IBM Plex Mono
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: custom
+      accent: custom
+      toggle:
+        icon: material/weather-night
+        name: الوضع الداكن
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: custom
+      accent: custom
+      toggle:
+        icon: material/weather-sunny
+        name: الوضع الفاتح
+  icon:
+    repo: fontawesome/brands/github
+    edit: material/pencil-outline
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.top
+    - navigation.footer
+    - navigation.indexes
+    - toc.follow
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+    - content.action.edit
+
+extra_css:
+  - assets/extra.css
+
+hooks:
+  - hooks/noon_docs.py
+
+plugins:
+  - search:
+      lang:
+        - ar
+        - en
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - def_list
+  - md_in_html
+  - tables
+  - toc:
+      permalink: "#"
+      # المُعرِّف الافتراضي يحذف الحروف غير اللاتينية فتصير المراسي العربية فارغة
+      slugify: !!python/object/apply:pymdownx.slugs.slugify
+        kwds:
+          case: lower
+  - pymdownx.details
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.keys
+  - pymdownx.superfences      # كتل ```noon و```output يضيفها الخطّاف
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+
+nav:
+  - الرئيسية: index.md
+  - البدء:
+      - التثبيت والتشغيل: getting-started/install.md
+      - أوّل برنامج: getting-started/first-program.md
+      - الصدفة التفاعلية: getting-started/repl.md
+  - دليل اللغة:
+      - القيم والأنواع: guide/values.md
+      - المتغيّرات والنطاقات: guide/variables.md
+      - العمليات: guide/operators.md
+      - الشروط والحلقات: guide/control-flow.md
+      - الدوال: guide/functions.md
+      - النصوص: guide/strings.md
+      - القوائم والقواميس: guide/collections.md
+      - الأصناف: guide/classes.md
+      - الأخطاء: guide/errors.md
+  - المرجع:
+      - الكلمات المفتاحية: reference/keywords.md
+      - الدوال المدمجة: reference/builtins.md
+      - توابع الأنواع: reference/methods.md
+      - الصيغة: reference/grammar.md
+      - سطر الأوامر: reference/cli.md
+  - أمثلة: examples.md
+  - الأدوات:
+      - إضافة VS Code: tools/vscode.md
+  - من الداخل:
+      - كيف يعمل المُفسِّر: internals/architecture.md
+      - قرارات التصميم: internals/design.md
+      - المساهمة: internals/contributing.md

@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="نون">
+  <rect width="64" height="64" rx="14" fill="#0f5c55"/>
+  <!-- حرف النون: قوس مفتوح إلى الأعلى ونقطة فوقه -->
+  <path d="M15 29a17 17 0 0 0 34 0" fill="none" stroke="#fff" stroke-width="7" stroke-linecap="round"/>
+  <circle cx="32" cy="17" r="5" fill="#e0ad55"/>
+</svg>

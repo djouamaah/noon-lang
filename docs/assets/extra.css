@@ -1,0 +1,101 @@
+/* ——— ألوان «نون»: أخضر زيتي عميق وذهبي ——— */
+:root,
+[data-md-color-scheme="default"] {
+  --md-primary-fg-color: #0f5c55;
+  --md-primary-fg-color--light: #1b7a70;
+  --md-primary-fg-color--dark: #0a3f3a;
+  --md-primary-bg-color: #ffffff;
+  --md-accent-fg-color: #b07a22;
+  --md-accent-fg-color--transparent: rgba(176, 122, 34, 0.1);
+  --noon-output-border: #b07a22;
+}
+
+[data-md-color-scheme="slate"] {
+  --md-primary-fg-color: #12685f;
+  --md-primary-fg-color--light: #1e8a7e;
+  --md-primary-fg-color--dark: #0b4540;
+  --md-accent-fg-color: #e0ad55;
+  --md-accent-fg-color--transparent: rgba(224, 173, 85, 0.12);
+  --md-typeset-a-color: #5cc4b6;
+  --noon-output-border: #e0ad55;
+  /* ألوان السِّمة للأعداد والدوال المدمجة كانت دون تباين 4.5:1 على خلفية الشيفرة */
+  --md-code-hl-number-color: #ef8074;
+  --md-code-hl-constant-color: #a797ee;
+}
+
+/* ——— الشيفرة العربية: كل سطر يأخذ اتجاه أوّل حرف قويّ فيه ———
+   Material يفرض اتجاهًا من اليسار لكل الشيفرة، وهو صحيح لـ bash لا لـ«نون». */
+.md-typeset .noon-code pre > code,
+.md-typeset .noon-output pre > code {
+  direction: rtl;
+  text-align: right;
+  unicode-bidi: plaintext;
+}
+
+.md-typeset .noon-code pre > code {
+  font-size: 0.8rem;
+  line-height: 1.75;
+}
+
+/* ——— كتلة الناتج تحت المثال ——— */
+.md-typeset .noon-output {
+  margin: -0.55em 0 1.4em;
+  border-inline-start: 3px solid var(--noon-output-border);
+  background: var(--md-code-bg-color);
+  border-radius: 0 0 0.2rem 0.2rem;
+}
+
+.md-typeset .noon-output__label {
+  display: block;
+  padding: 0.5em 1.2em 0;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0;
+  color: var(--md-default-fg-color--light);
+}
+
+.md-typeset .noon-output pre {
+  margin: 0;
+}
+
+.md-typeset .noon-output pre > code {
+  background: transparent;
+  font-size: 0.78rem;
+  line-height: 1.7;
+  padding-top: 0.3em;
+}
+
+/* ——— الواجهة ——— */
+.noon-hero {
+  padding: 1.2rem 0 0.4rem;
+}
+
+.md-typeset .noon-hero h1 {
+  font-size: 2.6rem;
+  font-weight: 700;
+  margin: 0 0 0.3rem;
+  color: var(--md-default-fg-color);
+}
+
+.md-typeset .noon-hero .noon-tagline {
+  font-size: 1.05rem;
+  color: var(--md-default-fg-color--light);
+  max-width: 38rem;
+  margin: 0 0 1.2rem;
+}
+
+.md-typeset .noon-hero .md-button {
+  margin: 0 0 0.5rem 0.5rem;
+}
+
+/* الجداول المرجعية: العمود الأول شيفرة ولا يلتفّ */
+.md-typeset table:not([class]) td:first-child code {
+  white-space: nowrap;
+}
+
+/* على الهاتف: عنوان أصغر */
+@media screen and (max-width: 44.9375em) {
+  .md-typeset .noon-hero h1 {
+    font-size: 2rem;
+  }
+}
