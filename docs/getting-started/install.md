@@ -77,7 +77,7 @@ python noon.py مرحبا.noon
 [آخر إصدار](https://github.com/djouamaah/noon-lang/releases/latest):
 
 ```bash
-pip install https://github.com/djouamaah/noon-lang/releases/download/v1.1.0/noon_lang-1.1.0-py3-none-any.whl
+pip install https://github.com/djouamaah/noon-lang/releases/download/v1.2.0/noon_lang-1.2.0-py3-none-any.whl
 ```
 
 أو من نسختك من المستودع، فتظهر تعديلاتك فورًا:

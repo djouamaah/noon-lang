@@ -20,7 +20,7 @@ from .runtime import Runtime
 from .values import set_arabic_digits, stringify
 from .vm import VM
 
-VERSION = "١٫١"
+VERSION = "١٫٢"
 EXTENSIONS = (".noon", ".نون")
 COMPILED_EXTENSION = ".noonc"
 

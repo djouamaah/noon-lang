@@ -11,13 +11,13 @@
 **ويندوز**
 
 ```bash
-xcopy /E /I editors\vscode "%USERPROFILE%\.vscode\extensions\noon-lang-1.1.0"
+xcopy /E /I editors\vscode "%USERPROFILE%\.vscode\extensions\noon-lang-1.2.0"
 ```
 
 **لينكس/ماك**
 
 ```bash
-cp -r editors/vscode ~/.vscode/extensions/noon-lang-1.1.0
+cp -r editors/vscode ~/.vscode/extensions/noon-lang-1.2.0
 ```
 
 وللتطوير على الإضافة نفسها، الوصلة الرمزية أفضل من النسخ لأن كل تعديل يظهر

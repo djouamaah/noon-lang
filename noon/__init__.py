@@ -12,4 +12,4 @@ __all__ = [
     "VM", "Interpreter", "compile_source", "run", "parse", "tokenize",
     "NoonError", "NoonSyntaxError", "NoonRuntimeError", "NoonThrow",
 ]
-__version__ = "1.1.0"
+__version__ = "1.2.0"

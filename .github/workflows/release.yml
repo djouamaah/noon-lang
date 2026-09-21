@@ -1,6 +1,6 @@
 name: Release
 
-# Pushing a tag such as v1.1.0 publishes a GitHub release with the Python
+# Pushing a tag such as v1.2.0 publishes a GitHub release with the Python
 # package (wheel and sdist) and the VS Code extension (.vsix) attached, and
 # the matching CHANGELOG.md section as its notes. Nothing is published unless
 # the tag matches every version in the repository and all tests pass.

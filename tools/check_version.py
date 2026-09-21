@@ -2,8 +2,8 @@
 """يتحقّق أن رقم الإصدار واحد في كل مكان، ويستخرج ملاحظات الإصدار.
 
     python tools/check_version.py              # الأرقام متّفقة؟
-    python tools/check_version.py v1.1.0       # ومتّفقة مع هذا الوسم؟
-    python tools/check_version.py v1.1.0 --notes   # ملاحظات الإصدار من CHANGELOG.md
+    python tools/check_version.py v1.2.0       # ومتّفقة مع هذا الوسم؟
+    python tools/check_version.py v1.2.0 --notes   # ملاحظات الإصدار من CHANGELOG.md
 
 يُشغّله سير عمل الإصدار قبل البناء، فلا يُنشر إصدار وسمُه يخالف ما في الحزمة.
 """

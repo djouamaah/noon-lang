@@ -2,7 +2,7 @@
   "name": "noon-lang",
   "displayName": "نون — Noon language",
   "description": "تلوين صيغة لغة «نون» العربية ومقاطعها الجاهزة (Arabic programming language support)",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "publisher": "noon-lang",
   "license": "MIT",
   "repository": {
