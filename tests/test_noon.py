@@ -380,6 +380,107 @@ def test_math_builtins():
     assert val("طول(مدى(٥))") == 5
 
 
+# ——————————————— الوحدات والمكتبة القياسية ———————————————
+
+def _with_modules(files, main):
+    """يكتب الوحدات في مجلّد مؤقّت ويشغّل البرنامج كأنه فيه."""
+    import shutil
+    import tempfile
+    folder = tempfile.mkdtemp(prefix="noon-modules-")
+    try:
+        for name, source in files.items():
+            path = os.path.join(folder, name)
+            os.makedirs(os.path.dirname(path), exist_ok=True)
+            with io.open(path, "w", encoding="utf-8") as handle:
+                handle.write(source)
+        buffer = io.StringIO()
+        engine = ENGINE(out=buffer)
+        engine.base_dir = folder
+        try:
+            engine.run(main)
+        except NoonError as error:
+            buffer.write("%s\n" % error)
+        return buffer.getvalue()
+    finally:
+        shutil.rmtree(folder, ignore_errors=True)
+
+
+def test_import_the_standard_math_library():
+    assert out('متغير ر = استورد("رياضيات")\nاطبع(ر، نوع(ر)، ر.عاملي(٥))') == \
+        "<وحدة رياضيات> وحدة 120\n"
+    assert val('استورد("رياضيات").عاملي(٣٠)') == 265252859812191058636308480000000
+    assert val('استورد("رياضيات") == استورد("رياضيات")') is True
+
+
+def test_math_library_results():
+    cases = {
+        "توافيق(٥٢، ٥)": 2598960, "توافيق(٣، ٥)": 0, "تباديل(٥، ٢)": 20,
+        "قاسم_مشترك(١٢، -١٨)": 6, "قاسم_مشترك(٠، ٠)": 0, "مضاعف_مشترك(٤، ٦)": 12,
+        "جذر_صحيح(١٠ ** ٢٠ + ١)": 10 ** 10, "جذر_صحيح(١٥)": 3,
+        "أولي(٩٧)": True, "أولي(٩١)": False, "أولي(٢)": True, "أولي(١)": False,
+        "الأعداد_الأولية(٣٠)": [2, 3, 5, 7, 11, 13, 17, 19, 23, 29],
+        "الأعداد_الأولية(١)": [], "عوامل_أولية(٣٦٠)": [2, 2, 2, 3, 3, 5],
+        "عوامل_أولية(٩٧)": [97], "فيبوناتشي(٠)": 0, "فيبوناتشي(٩٠)": 2880067194370816120,
+        "قوة_بباقي(٢، ١٠٠، ١٣)": 3, "قوة_بباقي(٥، ٠، ١)": 0,
+        "متوسط([١، ٢، ٣، ٤])": 2.5, "وسيط([٤، ١، ٣، ٢])": 2.5, "وسيط([٣، ١، ٢])": 2,
+        "منوال([١، ٢، ٢، ٣، ٣])": 2, "تباين([٢، ٤، ٤، ٤، ٥، ٥، ٧، ٩])": 4,
+        "انحراف_معياري([٢، ٤، ٤، ٤، ٥، ٥، ٧، ٩])": 2, "إشارة(-٣)": -1,
+        "مقيد(١٥، ٠، ١٠)": 10, "زوجي(٤)": True, "فردي(٤)": False, "فردي(٢٫٥)": False,
+    }
+    for call, expected in cases.items():
+        got = val('استورد("رياضيات").' + call)
+        assert got == expected, (call, got)
+        assert isinstance(got, bool) == isinstance(expected, bool), (call, got)
+
+
+def test_math_library_rejects_bad_input_by_name():
+    error = fails('استورد("رياضيات").عاملي(-١)', NoonRuntimeError)
+    assert "«عاملي»" in error.message
+    error = fails('استورد("رياضيات").متوسط([])', NoonRuntimeError)
+    assert "«متوسط»" in error.message
+
+
+def test_private_names_and_builtins_are_not_exported():
+    error = fails('استورد("رياضيات")._صحيح(١)', NoonRuntimeError)
+    assert "لا تحوي «_صحيح»" in error.message
+    fails('استورد("رياضيات").اطبع', NoonRuntimeError)
+
+
+def test_modules_keep_their_own_globals():
+    files = {"عداد.noon": (
+        "متغير عدد_المرات = ٠\n"
+        "دالة زد() { عدد_المرات += ١؛ أرجع عدد_المرات }\n"
+        "دالة مساعد(ع) { أرجع ع * ٢ }\n"
+        "صنف نقطة { دالة تهيئة(س) { هذا.س = س } دالة ضعف() { أرجع مساعد(هذا.س) } }\n")}
+    main = ("متغير عدد_المرات = ١٠٠\n"
+            'دالة مساعد(ع) { أرجع "مساعد البرنامج" }\n'
+            'متغير ع = استورد("عداد")\n'
+            "اطبع(ع.زد()، ع.زد()، ع.عدد_المرات، عدد_المرات، ع.نقطة(٤).ضعف())\n")
+    assert _with_modules(files, main) == "1 2 2 100 8\n"
+
+
+def test_module_lookup_order_and_paths():
+    files = {"رياضيات.noon": 'متغير مصدر = "محلّي"\n',
+             os.path.join("أدوات", "نصوص.نون"): 'متغير اسم = "نصوص"\n'}
+    main = ('اطبع(استورد("رياضيات").مصدر)\n'      # ملف المستخدم قبل المكتبة
+            'اطبع(استورد("أدوات/نصوص").اسم)\n')
+    assert _with_modules(files, main) == "محلّي\nنصوص\n"
+
+
+def test_module_errors_name_the_module():
+    files = {"أ.noon": 'استورد("ب")\n', "ب.noon": 'استورد("أ")\n',
+             "معطوب.noon": "\n\nمتغير = ١\n"}
+    assert _with_modules(files, 'استورد("أ")') == \
+        "خطأ تشغيل [سطر 1]: استيراد دائري: أ ← ب ← أ\n"
+    assert _with_modules(files, '\nاستورد("معطوب")') == (
+        "خطأ تشغيل [سطر 2]: خطأ نحوي في الوحدة «معطوب» [سطر 3]: "
+        "توقّعت اسم متغير ولكن وجدت «=»\n")
+    assert _with_modules(files, 'استورد("مفقودة")') == \
+        "خطأ تشغيل [سطر 1]: لا توجد وحدة باسم «مفقودة»\n"
+    assert _with_modules(files, "استورد(٥)") == \
+        "خطأ تشغيل [سطر 1]: اسم الوحدة يجب أن يكون نصًّا غير فارغ\n"
+
+
 # ——————————————— الأمثلة ———————————————
 
 def test_all_examples_run():

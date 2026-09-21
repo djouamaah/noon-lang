@@ -111,12 +111,16 @@ nav:
       - القوائم والقواميس: guide/collections.md
       - الأصناف: guide/classes.md
       - الأخطاء: guide/errors.md
+      - الوحدات: guide/modules.md
   - المرجع:
       - الكلمات المفتاحية: reference/keywords.md
       - الدوال المدمجة: reference/builtins.md
       - توابع الأنواع: reference/methods.md
       - الصيغة: reference/grammar.md
       - سطر الأوامر: reference/cli.md
+  - المكتبة القياسية:
+      - نظرة عامة: library/index.md
+      - رياضيات: library/math.md
   - أمثلة: examples.md
   - الأدوات:
       - إضافة VS Code: tools/vscode.md

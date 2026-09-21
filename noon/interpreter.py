@@ -78,6 +78,19 @@ class Interpreter(Runtime):
         program = parse(source)
         return self.execute_program(program, repl=repl)
 
+    def load_module(self, program):
+        """ينفّذ برنامج وحدة في بيئة عامّة خاصّة بها، ويُرجع ما عرّفته."""
+        env = Environment()
+        for name, value in B.GLOBALS.items():
+            env.declare(name, value, constant=True)
+        previous = self.env
+        self.env = env
+        try:
+            self.execute_program(program)
+        finally:
+            self.env = previous
+        return env.values
+
     def execute_program(self, program, repl=False):
         last = None
         try:

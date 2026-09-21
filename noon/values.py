@@ -48,12 +48,16 @@ class Cell:
 class Closure:
     """دالة مُترجَمة مع خلاياها الملتقَطة — نظير NoonFunction في الآلة الافتراضية."""
 
-    __slots__ = ("function", "cells", "owner")
+    __slots__ = ("function", "cells", "owner", "globals", "constants")
 
-    def __init__(self, function, cells=(), owner=None):
+    def __init__(self, function, cells=(), owner=None, globals=None, constants=None):
         self.function = function
         self.cells = cells
         self.owner = owner            # الصنف الذي عُرِّف فيه التابع، لأجل «الأصل»
+        # عوامّ الملف الذي عُرِّفت فيه: دالة من وحدة مستوردة ترى عوامّ وحدتها
+        # لا عوامّ البرنامج الذي يناديها
+        self.globals = globals
+        self.constants = constants
 
     @property
     def name(self):
@@ -180,6 +184,32 @@ class SuperProxy:
         return method.bind(self.instance, owner)
 
 
+class Module:
+    """وحدة مستوردة بـ«استورد»: ما عرّفه ملفها في مستواه الأعلى."""
+
+    __slots__ = ("name", "path", "namespace", "hidden")
+
+    def __init__(self, name, path, namespace, hidden=()):
+        self.name = name
+        self.path = path
+        # عوامّ الوحدة نفسها لا نسخة منها: ما تغيّره دوالّها يُرى من خارجها
+        self.namespace = namespace
+        self.hidden = hidden          # الدوال المدمجة، فليست من الوحدة
+
+    def exports(self, name):
+        return (name in self.namespace and not name.startswith("_")
+                and name not in self.hidden)
+
+    def get(self, name, line=None):
+        if not self.exports(name):
+            raise NoonRuntimeError(
+                "الوحدة «%s» لا تحوي «%s»" % (self.name, name), line)
+        return self.namespace[name]
+
+    def __repr__(self):
+        return "<وحدة %s>" % self.name
+
+
 CALLABLES = (NoonFunction, BuiltinFunction, BoundBuiltin, NoonClass,
              Closure, BoundMethod)
 
@@ -223,6 +253,8 @@ def type_name(value):
         return "صنف"
     if isinstance(value, NoonInstance):
         return value.klass.name
+    if isinstance(value, Module):
+        return "وحدة"
     if isinstance(value, (NoonFunction, BuiltinFunction, BoundBuiltin,
                           Closure, BoundMethod)):
         return "دالة"

@@ -9,13 +9,19 @@
 يَرِث المحرّك `Runtime` وينفّذ `call` لتعمل الدوال المدمجة كلها معه.
 """
 
+import os
+
 from . import builtins as B
-from .errors import NoonRuntimeError
-from .values import (BoundBuiltin, NoonClass, NoonInstance, SuperProxy, equals,
-                     is_number, stringify, type_name)
+from .errors import NoonError, NoonRuntimeError
+from .values import (BoundBuiltin, Module, NoonClass, NoonInstance, SuperProxy,
+                     equals, is_number, stringify, type_name)
 
 INIT_METHOD = "تهيئة"      # الباني
 STR_METHOD = "نص"          # تمثيل الكائن نصًّا
+
+# مكتبة «نون» القياسية: وحدات مكتوبة بـ«نون» تأتي مع اللغة
+LIBRARY_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "lib")
+MODULE_EXTENSIONS = (".noon", ".نون")
 
 
 class Runtime:
@@ -28,6 +34,74 @@ class Runtime:
 
     def call(self, callee, args, line):
         raise NotImplementedError("على المحرّك أن يُنفّذ الاستدعاء")
+
+    def load_module(self, program):
+        """ينفّذ الشجرة النحوية لوحدة بعوامّ خاصّة بها ويُرجع قاموس عوامّها."""
+        raise NotImplementedError("على المحرّك أن يُنفّذ الوحدات")
+
+    # ——————————— الوحدات ———————————
+
+    base_dir = None        # مجلّد البرنامج الرئيسي؛ يضبطه سطر الأوامر
+
+    def import_module(self, name, line):
+        """«استورد»: تُحمَّل الوحدة مرّة واحدة لكل محرّك، ثم تُعاد نفسها."""
+        from .parser import parse       # parser ← … ← runtime: استيراد متأخّر
+
+        if not isinstance(name, str) or not name.strip():
+            raise NoonRuntimeError("اسم الوحدة يجب أن يكون نصًّا غير فارغ", line)
+        modules = self.__dict__.setdefault("_modules", {})
+        loading = self.__dict__.setdefault("_loading", [])
+        path = self._find_module(name, loading, line)
+        if path in modules:
+            return modules[path]
+        label = os.path.splitext(os.path.basename(path))[0]
+        if path in loading:
+            chain = [os.path.splitext(os.path.basename(p))[0]
+                     for p in loading[loading.index(path):]]
+            error = NoonRuntimeError(
+                "استيراد دائري: %s" % " ← ".join(chain + [label]), line)
+            error.circular = True
+            raise error
+        with open(path, encoding="utf-8-sig") as handle:
+            source = handle.read()
+
+        loading.append(path)
+        try:
+            members = self.load_module(parse(source))
+        except NoonError as error:
+            if getattr(error, "circular", False):   # السلسلة في الرسالة تكفي
+                circular = NoonRuntimeError(error.message, line)
+                circular.circular = True
+                raise circular
+            # سطر الخطأ في ملف الوحدة لا في البرنامج، فيُذكر في الرسالة
+            where = " [سطر %d]" % error.line if error.line else ""
+            raise NoonRuntimeError("%s في الوحدة «%s»%s: %s"
+                                   % (error.kind, label, where, error.message), line)
+        finally:
+            loading.pop()
+        module = Module(label, path, members, B.GLOBALS)
+        modules[path] = module
+        return module
+
+    def _find_module(self, name, loading, line):
+        """ملف في مجلّد المستورِد أوّلًا (أو مسار صريح)، ثم المكتبة القياسية."""
+        here = (os.path.dirname(loading[-1]) if loading
+                else self.base_dir or os.getcwd())
+        if name.endswith(MODULE_EXTENSIONS):
+            candidates = [name]
+        else:
+            candidates = [name + ext for ext in MODULE_EXTENSIONS]
+        places = [here]
+        explicit = (os.path.isabs(name) or "/" in name or "\\" in name
+                    or name.endswith(MODULE_EXTENSIONS))
+        if not explicit:
+            places.append(LIBRARY_DIR)
+        for place in places:
+            for candidate in candidates:
+                path = os.path.join(place, candidate)
+                if os.path.isfile(path):
+                    return os.path.normcase(os.path.realpath(path))
+        raise NoonRuntimeError("لا توجد وحدة باسم «%s»" % name, line)
 
     def binary(self, op, left, right, line):
         if op == "==":
@@ -167,6 +241,8 @@ class Runtime:
 
     def get_member(self, obj, name, line):
         if isinstance(obj, NoonInstance):
+            return obj.get(name, line)
+        if isinstance(obj, Module):
             return obj.get(name, line)
         if isinstance(obj, SuperProxy):
             return obj.get(name, line)

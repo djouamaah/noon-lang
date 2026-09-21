@@ -177,6 +177,77 @@ def _assert(interp, args, line):
     return None
 
 
+# ——— ما يلزم لكتابة برامج أدوات بـ«نون» نفسها، ومنها مُفسِّرها (selfhost/) ———
+
+# وسائط البرنامج بعد اسم ملفه في سطر الأوامر؛ يملؤها cli.main
+PROGRAM_ARGS = []
+
+
+def _code_point(interp, args, line):
+    value = args[0]
+    if not isinstance(value, str) or len(value) != 1:
+        raise NoonRuntimeError("«رمز» تحتاج نصًّا من حرف واحد، لا «%s»"
+                               % interp.stringify(value), line)
+    return ord(value)
+
+
+def _character(interp, args, line):
+    code = _need_int(args[0], line, "وسيط «محرف»")
+    if not 0 <= code <= 0x10FFFF:
+        raise NoonRuntimeError("«محرف» تحتاج رقمًا بين 0 و1114111، لا %d" % code, line)
+    return chr(code)
+
+
+def _read_file(interp, args, line):
+    path = args[0]
+    if not isinstance(path, str):
+        raise NoonRuntimeError("مسار الملف يجب أن يكون نصًّا", line)
+    try:
+        with open(path, encoding="utf-8-sig") as handle:
+            return handle.read()
+    except FileNotFoundError:
+        raise NoonRuntimeError("لا يوجد ملف بالمسار: %s" % path, line)
+    except UnicodeDecodeError:
+        raise NoonRuntimeError("الملف «%s» ليس نصًّا بترميز UTF-8" % path, line)
+    except OSError as error:
+        raise NoonRuntimeError("تعذّرت قراءة الملف «%s»: %s" % (path, error.strerror or error), line)
+
+
+def _save_compiled(interp, args, line):
+    """يكتب ملف ‎.noonc من بنية دالة مُترجَمة مصنوعة بـ«نون» (selfhost/noon.noon).
+
+    «نون» لا تعرف البايتات، فترميز البنية ملفًّا هو الخطوة الوحيدة في مترجِمها
+    الذاتي المكتوبة بـ Python. البنية هي ترتيب bytecode._to_data نفسه.
+    """
+    from .bytecode import _from_data, dumps
+
+    path, data = args
+    if not isinstance(path, str):
+        raise NoonRuntimeError("مسار الملف يجب أن يكون نصًّا", line)
+    try:
+        compiled = _from_data(data)
+    except (ValueError, TypeError, IndexError, KeyError) as error:
+        raise NoonRuntimeError("بنية مُترجَمة غير صالحة: %s" % error, line)
+    blob = dumps(compiled)
+    try:
+        with open(path, "wb") as handle:
+            handle.write(blob)
+    except OSError as error:
+        raise NoonRuntimeError("تعذّرت كتابة الملف «%s»: %s" % (path, error.strerror or error), line)
+    return len(blob)
+
+
+def _import(interp, args, line):
+    return interp.import_module(args[0], line)
+
+
+def _member(interp, args, line):
+    obj, name = args
+    if not isinstance(name, str):
+        raise NoonRuntimeError("اسم العضو يجب أن يكون نصًّا", line)
+    return interp.get_member(obj, name, line)
+
+
 GLOBALS = {
     "اطبع": BuiltinFunction("اطبع", _print, 0, -1),
     "اقرأ": BuiltinFunction("اقرأ", _read, 0, 1),
@@ -216,6 +287,13 @@ GLOBALS = {
     "أرقام_عربية": BuiltinFunction(
         "أرقام_عربية",
         lambda i, a, l: set_arabic_digits(truthy(a[0]) if a else True), 0, 1),
+    "رمز": BuiltinFunction("رمز", _code_point, 1),
+    "محرف": BuiltinFunction("محرف", _character, 1),
+    "اقرأ_ملف": BuiltinFunction("اقرأ_ملف", _read_file, 1),
+    "وسائط": BuiltinFunction("وسائط", lambda i, a, l: list(PROGRAM_ARGS), 0),
+    "عضو": BuiltinFunction("عضو", _member, 2),
+    "احفظ_مترجما": BuiltinFunction("احفظ_مترجما", _save_compiled, 2),
+    "استورد": BuiltinFunction("استورد", _import, 1),
     "باي": math.pi,
 }
 

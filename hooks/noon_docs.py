@@ -168,6 +168,8 @@ def playground_files():
     with zipfile.ZipFile(archive, "w", zipfile.ZIP_DEFLATED) as bundle:
         for path in sorted(glob.glob(os.path.join(ROOT, "noon", "*.py"))):
             bundle.write(path, "noon/" + os.path.basename(path))
+        for path in sorted(glob.glob(os.path.join(ROOT, "noon", "lib", "*.noon"))):
+            bundle.write(path, "noon/lib/" + os.path.basename(path))   # المكتبة القياسية
         bundle.write(os.path.join(ROOT, "docs", PLAYGROUND_DIR, "runner.py"), "runner.py")
     files["noon.zip"] = archive.getvalue()
 

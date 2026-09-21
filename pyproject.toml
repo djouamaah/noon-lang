@@ -29,3 +29,6 @@ noon = "noon.cli:main"
 
 [tool.setuptools]
 packages = ["noon"]
+
+[tool.setuptools.package-data]
+noon = ["lib/*.noon"]              # المكتبة القياسية، مكتوبة بـ«نون»

@@ -10,11 +10,13 @@ import os
 import sys
 
 from . import bytecode
+from .builtins import PROGRAM_ARGS
 from .compiler import compile_source
 from .errors import NoonError, NoonThrow
 from .interpreter import Interpreter
 from .lexer import tokenize
 from .parser import parse
+from .runtime import Runtime
 from .values import set_arabic_digits, stringify
 from .vm import VM
 
@@ -223,10 +225,26 @@ def main(argv=None):
                         help="عرض الأعداد بالأرقام العربية-الهندية (٠٩)")
     parser.add_argument("-v", "--version", action="version",
                         version="نون %s" % VERSION)
+    parser.add_argument("program_args", nargs=argparse.REMAINDER,
+                        help="وسائط البرنامج بعد اسم ملفه، تُقرأ بـ«وسائط()»")
     args = parser.parse_args(argv)
+    if args.program_args and (args.compile or args.dis or args.tokens or args.ast):
+        # البرنامج لا يُشغَّل، فما بعد اسم الملف خيارات «نون» نفسها:
+        # «--ترجم برنامج.noon -o آخر.noonc»
+        rest = parser.parse_args(args.program_args)
+        if rest.file is not None or rest.program_args:
+            parser.error("وسائط زائدة: %s" % " ".join(args.program_args))
+        for key, value in vars(rest).items():
+            if key not in ("file", "program_args") and value not in (None, False):
+                setattr(args, key, value)
+        args.program_args = []
 
     dump = "tokens" if args.tokens else ("ast" if args.ast else None)
     set_arabic_digits(args.arabic_digits)
+    program_args = list(args.program_args)
+    if args.code is not None and args.file:     # مع -c لا ملف: الوسيط الأول للبرنامج
+        program_args.insert(0, args.file)
+    PROGRAM_ARGS[:] = program_args
     if args.tree and (args.compile or args.dis):
         parser.error("--شجرة لا تُجمع مع --ترجم أو --فكّك: المُفسِّر لا يترجم")
 
@@ -237,6 +255,8 @@ def main(argv=None):
         elif args.file:
             source, script = load_program(args.file)
             label = args.file
+            # «استورد» يبحث عن الوحدات بجوار البرنامج قبل المكتبة القياسية
+            Runtime.base_dir = os.path.dirname(os.path.abspath(args.file))
         elif not sys.stdin.isatty():
             source, label = sys.stdin.read(), "<الدخل القياسي>"
         else:

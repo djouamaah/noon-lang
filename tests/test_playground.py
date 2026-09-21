@@ -128,6 +128,8 @@ def test_bundle_runs_on_its_own_outside_the_repository():
         if path.endswith(".py"):
             assert "noon/" + path in names, "ينقص الحزمة: %s" % path
     assert "runner.py" in names
+    for path in os.listdir(os.path.join(ROOT, "noon", "lib")):
+        assert "noon/lib/" + path in names, "ينقص المكتبة: %s" % path
 
     workdir = tempfile.mkdtemp()
     try:
@@ -139,13 +141,14 @@ def test_bundle_runs_on_its_own_outside_the_repository():
             "import runner, noon\n"
             "assert noon.__file__.startswith(%r), noon.__file__\n"
             "out = []\n"
-            "r = runner.run('صنف أ { نص() { أرجع \"من الحزمة\" } }\\nاطبع(أ())', emit=out.append)\n"
+            "r = runner.run('صنف أ { نص() { أرجع \"من الحزمة\" } }\\nاطبع(أ())\\n"
+            "اطبع(استورد(\"رياضيات\").عاملي(٥))', emit=out.append)\n"
             "sys.stdout.buffer.write(json.dumps([''.join(out), r['ok']], ensure_ascii=False).encode('utf-8'))\n"
         ) % (workdir, workdir)
         completed = subprocess.run([sys.executable, "-c", script], cwd=workdir,
                                    capture_output=True, timeout=120)
         assert completed.returncode == 0, completed.stderr.decode("utf-8", "replace")
-        assert json.loads(completed.stdout.decode("utf-8")) == ["من الحزمة\n", True]
+        assert json.loads(completed.stdout.decode("utf-8")) == ["من الحزمة\n120\n", True]
     finally:
         shutil.rmtree(workdir, ignore_errors=True)
 

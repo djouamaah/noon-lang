@@ -39,6 +39,7 @@ jobs:
           python tests/test_vm.py
           python tests/test_docs.py
           python tests/test_playground.py
+          python tests/test_selfhost.py
 
       - name: Build the Python package
         run: python -m build

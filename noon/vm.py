@@ -65,18 +65,27 @@ class VM(Runtime):
         """يترجم نصًّا وينفّذه، ويُرجع قيمة آخر تعبير إن كان repl."""
         return self.execute(compile_program(parse(source), repl=repl))
 
-    def execute(self, script):
+    def execute(self, script, globals_=None, constants=None):
+        """ينفّذ برنامجًا مُترجَمًا؛ بعوامّ الآلة، أو بعوامّ وحدة تُستورد."""
         if not isinstance(script, CompiledFunction):
             raise TypeError("execute تنتظر دالة مُترجَمة")
+        if globals_ is None:
+            globals_, constants = self.globals, self.constants
         frames, stack = self.frames, self.stack
         frame_base, stack_base = len(frames), len(stack)
-        frames.append(Frame(Closure(script), script, [None] * script.n_slots, 0,
-                            stack_base))
+        frames.append(Frame(Closure(script, (), None, globals_, constants), script,
+                            [None] * script.n_slots, 0, stack_base))
         try:
             return self._run(len(frames))
         finally:                                  # حالة نظيفة للصدفة بعد أي خطأ
             del frames[frame_base:]
             del stack[stack_base:]
+
+    def load_module(self, program):
+        """ينفّذ برنامج وحدة بعوامّ خاصّة بها، ويُرجعها."""
+        globals_ = dict(B.GLOBALS)
+        self.execute(compile_program(program), globals_, set(B.GLOBALS))
+        return globals_
 
     def call(self, callee, args, line):
         """استدعاء من خارج حلقة التنفيذ، كما تفعل `طبّق` و`فرز` بدالة المفتاح."""
@@ -204,12 +213,12 @@ class VM(Runtime):
         stack = self.stack
         push = stack.append
         pop = stack.pop
-        globals_ = self.globals
-        constants = self.constants
 
         while True:
             frame = frames[-1]
             fn = frame.function
+            globals_ = frame.closure.globals      # عوامّ ملف الدالة (انظر Closure)
+            constants = frame.closure.constants
             code = fn.code
             consts = fn.consts
             names = fn.names
@@ -395,7 +404,8 @@ class VM(Runtime):
                             else:
                                 cell = frame.closure.cells[index]
                             cells.append(cell)
-                        push(Closure(function, tuple(cells), frame.closure.owner))
+                        push(Closure(function, tuple(cells), frame.closure.owner,
+                                             globals_, constants))
 
                     elif opcode == O.SWAP:
                         stack[-1], stack[-2] = stack[-2], stack[-1]

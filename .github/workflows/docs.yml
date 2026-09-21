@@ -43,6 +43,9 @@ jobs:
       - name: Playground tests (runner, browser bundle, share links)
         run: python tests/test_playground.py
 
+      - name: Self-hosting tests (Noon's interpreter and compiler written in Noon)
+        run: python tests/test_selfhost.py
+
       - name: Grammar is up to date
         run: python tools/build_grammar.py --check
 
