@@ -13,7 +13,16 @@ class NoonError(Exception):
         self.line = line
         self.col = col
 
+    # خطأ وقع في دالة من وحدة مستوردة: المحرّك يضع فيه الوحدة (values.Module)،
+    # وسطر البرنامج الذي بدأ منه النداء المؤدّي إليه. «line» سطرٌ في ملف الوحدة.
+    module = None
+    program_line = None
+    located = False        # حدّد المحرّك موضعه؛ لا يُعاد تحديده وهو يعبر الإطارات
+
     def __str__(self):
+        if self.line and self.module is not None:
+            return "%s [سطر %d في «%s»]: %s" % (self.kind, self.line, self.module.name,
+                                                 self.message)
         if self.line:
             return "%s [سطر %d]: %s" % (self.kind, self.line, self.message)
         return "%s: %s" % (self.kind, self.message)
@@ -38,6 +47,15 @@ class NoonThrow(Exception):
         super().__init__("قيمة مرميّة")
         self.value = value
         self.line = line
+
+
+class ProgramExit(Exception):
+    """«اخرج(رمز)»: ينهي البرنامج فورًا برمز خروج. ليس خطأ لغة، فلا تلتقطه «امسك»
+    ولا تُنفَّذ بعده «أخيرًا»، في المحرّكين كليهما."""
+
+    def __init__(self, code=0):
+        super().__init__("اخرج")
+        self.code = code
 
 
 # ——— إشارات التحكّم في التدفّق (ليست أخطاء) ———

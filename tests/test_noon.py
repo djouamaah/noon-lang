@@ -481,6 +481,141 @@ def test_module_errors_name_the_module():
         "خطأ تشغيل [سطر 1]: اسم الوحدة يجب أن يكون نصًّا غير فارغ\n"
 
 
+def _module_error(files, main):
+    """الخطأ نفسه (لا نصّه) الذي أنهى برنامجًا يستورد هذه الوحدات."""
+    import shutil
+    import tempfile
+    folder = tempfile.mkdtemp(prefix="noon-modules-")
+    try:
+        for name, source in files.items():
+            with io.open(os.path.join(folder, name), "w", encoding="utf-8") as handle:
+                handle.write(source)
+        engine = ENGINE(out=io.StringIO())
+        engine.base_dir = folder
+        try:
+            engine.run(main)
+        except NoonError as error:
+            return error
+        raise AssertionError("كان يُفترض أن يفشل البرنامج")
+    finally:
+        shutil.rmtree(folder, ignore_errors=True)
+
+
+def test_errors_inside_a_module_name_it_and_the_calling_line():
+    files = {"أدوات.noon": (
+        "دالة قسمة(أ، ب) {\n"
+        "    أرجع أ / ب\n"
+        "}\n"
+        "دالة وسيطة(أ) { أرجع قسمة(أ، ٠) }\n"
+        "دالة نادِ(ف، س) { أرجع ف(س) }\n")}
+    # الخطأ في السطر ٢ من الوحدة، والنداء إليها من السطر ٣ من البرنامج (داخل دالة)
+    error = _module_error(files, (
+        'متغير أ = استورد("أدوات")\n'
+        "دالة ف() {\n"
+        "    أرجع أ.وسيطة(١)\n"
+        "}\n"
+        "اطبع(ف())\n"))
+    assert str(error) == "خطأ تشغيل [سطر 2 في «أدوات»]: القسمة على صفر"
+    assert error.module.name == "أدوات" and error.line == 2 and error.program_line == 3
+
+    # دالة من البرنامج تناديها الوحدة: الخطأ خطأ البرنامج، بسطره هو
+    error = _module_error(files, 'متغير أ = استورد("أدوات")\n\nاطبع(أ.نادِ(دالة(س) { أرجع س / ٠ }، ١))\n')
+    assert str(error) == "خطأ تشغيل [سطر 3]: القسمة على صفر"
+    assert error.module is None
+
+    # والمكتبة القياسية كذلك
+    error = fails('\nاطبع(استورد("رياضيات").عاملي(-١))', NoonRuntimeError)
+    assert error.module.name == "رياضيات" and error.program_line == 2
+    assert str(error).startswith("خطأ تشغيل [سطر ") and "في «رياضيات»]: «عاملي»" in str(error)
+
+
+def test_exit_ends_the_program_with_a_code():
+    from noon.errors import ProgramExit
+    buffer = io.StringIO()
+    try:
+        ENGINE(out=buffer).run(
+            'حاول { اطبع("قبل")؛ اخرج(٣) } امسك (خ) { اطبع("التُقط") } أخيرًا { اطبع("أخيرًا") }\n'
+            'اطبع("بعد")')
+    except ProgramExit as done:
+        assert done.code == 3
+    else:
+        raise AssertionError("كان يُفترض أن ينتهي البرنامج")
+    # فوري: لا «امسك» تلتقطه ولا «أخيرًا» تُنفَّذ بعده
+    assert buffer.getvalue() == "قبل\n"
+    for bad in ("اخرج(٣٠٠)", "اخرج(-١)", "اخرج(١٫٥)", 'اخرج("١")', "اخرج(صحيح)"):
+        assert "رمز الخروج" in fails(bad, NoonRuntimeError).message, bad
+
+
+def test_exit_code_reaches_the_shell():
+    from noon import cli
+    saved = sys.stdout
+    sys.stdout = io.StringIO()
+    try:
+        assert cli.main(["-c", 'اطبع("ثم")؛ اخرج(٤)']) == 4
+        assert cli.main(["-c", "اخرج()"]) == 0
+        assert cli.main(["-c", 'اطبع("بلا خروج")']) == 0
+    finally:
+        sys.stdout = saved
+
+
+def test_strings_library_results():
+    cases = {
+        'كلمات("السلامُ عليكم، يا هند! 2026؟")': ["السلامُ", "عليكم", "يا", "هند", "2026"],
+        'كلمات("  ،، ")': [],
+        'عدد_الكلمات("واحد، اثنان  ثلاثة")': 3,
+        'عكس_الكلمات("أنا أحب نون")': "نون أحب أنا",
+        'أسطر("أ\\r\\nب\\nج\\rد\\n")': ["أ", "ب", "ج", "د"],
+        'أسطر("")': [],
+        'حشو_البداية("٧"، ٣، "٠")': "007".translate({48: "٠", 55: "٧"}),
+        'حشو_النهاية("نون"، ٦، ".")': "نون...",
+        'حشو_البداية("طويل"، ٢)': "طويل",
+        'توسيط("نون"، ٨، "*")': "**نون***",
+        'اقتطع("السلام عليكم ورحمة الله"، ١٠)': "السلام عل…",
+        'اقتطع("قصير"، ١٠)': "قصير",
+        'اقتطع("طويل جدًا"، ٢، "...")': "طو",
+        'مواضع("نون ونون ونون"، "نون")': [0, 5, 10],
+        'عدد_مرات("ababab"، "aba")': 1,
+        'تكرار_المحارف("مرّة")': {"م": 1, "ر": 1, "ّ": 1, "ة": 1},
+        'بلا_تشكيل("مُحَمَّدٌ رَسُولُ اللّٰهِ")': "محمد رسول الله",
+        'بلا_تشكيل("جـمـيـل")': "جميل",
+        'وحد_الهمزات("إسلام أحمد آمنة مصطفى")': "اسلام احمد امنه مصطفي",
+        'متشابهان("أَحْمَد"، "احمد")': True,
+        'متشابهان("أحمد"، "محمد")': False,
+        'متناظر("حَصَان ناصح")': True,
+        'متناظر("كتاب")': False,
+        'متناظر("، !")': False,
+        'هجائي("نونabc")': True, 'هجائي("نون1")': False, 'هجائي("كِتابٌ")': True,
+        'عربي("مَرحبا")': True, 'عربي("ً")': False, 'عربي("abc")': False,
+        'رقمي("١٢٣")': True, 'رقمي("۴۵6")': True, 'رقمي("")': False, 'رقمي("١٫٥")': False,
+        'مسافة(" \\t\\n")': True, 'مسافة(" أ")': False,
+        'أرقام_لاتينية("سنة ٢٠٢٦ و۱۴۰۵")': "سنة 2026 و1405",
+        'أرقام_هندية("عام 2026")': "عام ٢٠٢٦",
+        'قالب("يا {اسم}، عمرك { عمر } {{سنة}}"، {"اسم": "هند"، "عمر": ٢٠})': "يا هند، عمرك 20 {سنة}",
+        'قالب("{0} + {١} = {2}"، [١، ٢، ٣])': "1 + 2 = 3",
+    }
+    for call, expected in cases.items():
+        got = val('استورد("نصوص").' + call)
+        assert got == expected, (call, got, expected)
+        assert isinstance(got, bool) == isinstance(expected, bool), (call, got)
+
+
+def test_strings_library_rejects_bad_input_by_name():
+    for call, words in {
+        'حشو_البداية(٥، ٣)': "«حشو_البداية» تحتاج نصًّا",
+        'حشو_النهاية("أ"، -١)': "«حشو_النهاية»: العرض",
+        'توسيط("أ"، ٥، "--")': "محرف الحشو حرف واحد",
+        'مواضع("abc"، "")': "المقطع المبحوث عنه فارغ",
+        'قالب("{مفقود}"، {})': "لا قيمة للمفتاح «مفقود»",
+        'قالب("{أ}"، [١])': "تُكتب المواضع أرقامًا",
+        'قالب("{5}"، [١])': "لا عنصر في الموضع 5",
+        'قالب("{مفتوح"، {})': "بلا «}» تغلقه",
+        'قالب("س"، ٥)': "من قاموس أو قائمة",
+    }.items():
+        error = fails('استورد("نصوص").' + call, NoonRuntimeError)
+        assert words in error.message, (call, error.message)
+        assert error.module.name == "نصوص"
+
+
 # ——————————————— الأمثلة ———————————————
 
 def test_all_examples_run():

@@ -18,6 +18,8 @@ const POWER_RIGHT = 3.5;         // يمين ** يقبل الأحادي والأ
 const KEYWORDS = new Set(Object.keys(LANGUAGE.keywords));
 const BUILTINS = new Set([...LANGUAGE.builtins, ...LANGUAGE.constants]);
 const MATH_MODULE = "رياضيات";
+const TEXT_MODULE = "نصوص";
+const LIBRARIES = new Set([MATH_MODULE, TEXT_MODULE]);   // أسماء الوحدات محجوزة للاستيراد
 const COMMA = "، ";
 
 // ——— الأسماء ———
@@ -29,7 +31,7 @@ export function noonName(raw) {
     .replace(/[^\p{L}\p{M}\p{N}_]/gu, "");
   if (!name) name = "س";
   if (/^\p{N}/u.test(name)) name = "_" + name;
-  if (KEYWORDS.has(normalize(name)) || BUILTINS.has(name) || name === MATH_MODULE) name += "_";
+  if (KEYWORDS.has(normalize(name)) || BUILTINS.has(name) || LIBRARIES.has(name)) name += "_";
   return name;
 }
 
@@ -176,6 +178,58 @@ const CUSTOM_BLOCKS = [
     output: "Number", style: "library_blocks",
     tooltip: "من وحدة «رياضيات» في مكتبة «نون» القياسية.",
   },
+  {
+    type: "noon_text1", message0: "نصوص: %1 %2",
+    args0: [
+      { type: "field_dropdown", name: "FUNC", options: [
+        ["كلمات", "كلمات"], ["عدد كلمات", "عدد_الكلمات"], ["أسطر", "أسطر"],
+        ["بلا تشكيل", "بلا_تشكيل"], ["بهمزات موحَّدة", "وحد_الهمزات"],
+        ["عكس كلمات", "عكس_الكلمات"], ["متناظر؟", "متناظر"],
+        ["بأرقام لاتينية", "أرقام_لاتينية"], ["بأرقام عربية", "أرقام_هندية"],
+        ["عربي؟", "عربي"], ["أرقام فقط؟", "رقمي"]] },
+      { type: "input_value", name: "TEXT" },
+    ],
+    output: null, style: "library_blocks",
+    tooltip: "من وحدة «نصوص» في مكتبة «نون» القياسية.",
+  },
+  {
+    type: "noon_text_find", message0: "نصوص: %1 %2 في %3",
+    args0: [
+      { type: "field_dropdown", name: "FUNC", options: [["عدد مرّات", "عدد_مرات"], ["مواضع", "مواضع"]] },
+      { type: "input_value", name: "PART" },
+      { type: "input_value", name: "TEXT" },
+    ],
+    inputsInline: true, output: null, style: "library_blocks",
+    tooltip: "المواضع تُعدّ من ٠، ودون تداخل.",
+  },
+  {
+    type: "noon_text_similar", message0: "نصوص: %1 يشبه %2",
+    args0: [{ type: "input_value", name: "A" }, { type: "input_value", name: "B" }],
+    inputsInline: true, output: "Boolean", style: "library_blocks",
+    tooltip: "بإهمال التشكيل وصور الهمزة والتاء المربوطة.",
+  },
+  {
+    type: "noon_text_pad", message0: "نصوص: %1 %2 إلى عرض %3 بالمحرف %4",
+    args0: [
+      { type: "field_dropdown", name: "FUNC", options: [
+        ["احشُ قبل", "حشو_البداية"], ["احشُ بعد", "حشو_النهاية"], ["وسّط", "توسيط"]] },
+      { type: "input_value", name: "TEXT" },
+      { type: "input_value", name: "WIDTH", check: "Number" },
+      { type: "input_value", name: "CHAR", check: "String" },
+    ],
+    inputsInline: true, output: "String", style: "library_blocks",
+  },
+  {
+    type: "noon_text_truncate", message0: "نصوص: اقتطع %1 إلى %2 محرفًا",
+    args0: [{ type: "input_value", name: "TEXT" }, { type: "input_value", name: "LIMIT", check: "Number" }],
+    inputsInline: true, output: "String", style: "library_blocks",
+  },
+  {
+    type: "noon_text_template", message0: "نصوص: املأ القالب %1 من %2",
+    args0: [{ type: "input_value", name: "TEXT" }, { type: "input_value", name: "VALUES" }],
+    inputsInline: true, output: "String", style: "library_blocks",
+    tooltip: "{٠} و{١}… تُملأ من عناصر القائمة بالترتيب.",
+  },
 ];
 
 // عناوين الكتل المدمجة بمفردات «نون» (ترجمة Blockly العربية فيها أخطاء، ولا تعرف اللغة)
@@ -261,6 +315,16 @@ export const TOOLBOX = {
       { kind: "block", type: "noon_lib2", inputs: { A: num(12), B: num(18) } },
       { kind: "block", type: "noon_lib_stats" },
     ] },
+    { kind: "category", name: "مكتبة نصوص", categorystyle: "library_category", contents: [
+      { kind: "label", text: "من الوحدة «نصوص»: استورد(\"نصوص\")" },
+      { kind: "block", type: "noon_text1", inputs: { TEXT: txt("السلامُ عليكم يا أهلَ نون") } },
+      { kind: "block", type: "noon_text1", fields: { FUNC: "بلا_تشكيل" }, inputs: { TEXT: txt("مُحَمَّدٌ") } },
+      { kind: "block", type: "noon_text_find", inputs: { PART: txt("نون"), TEXT: txt("نون ونون") } },
+      { kind: "block", type: "noon_text_similar", inputs: { A: txt("أَحْمَد"), B: txt("احمد") } },
+      { kind: "block", type: "noon_text_pad", inputs: { TEXT: txt("7"), WIDTH: num(3), CHAR: txt("0") } },
+      { kind: "block", type: "noon_text_truncate", inputs: { TEXT: txt("نصّ طويل يُقتطع"), LIMIT: num(8) } },
+      { kind: "block", type: "noon_text_template", inputs: { TEXT: txt("{٠} + {١}") } },
+    ] },
     { kind: "category", name: "النصوص", categorystyle: "text_category", contents: [
       { kind: "block", type: "text" },
       { kind: "block", type: "text_join" },
@@ -337,7 +401,7 @@ function createGenerator(Blockly) {
     init(workspace) {
       super.init?.(workspace);
       this.definitions_ = Object.create(null);
-      this.usesMath_ = false;
+      this.modules_ = new Set();           // وحدات المكتبة المستعملة، تُستورد في الأوّل
       this.variables_ = new Set();
       this.isInitialized = true;
     }
@@ -345,7 +409,7 @@ function createGenerator(Blockly) {
     // المتغيّرات تُصرَّح في أوّل البرنامج، والدوال قبل أن تُستعمل
     finish(code) {
       const head = [];
-      if (this.usesMath_) head.push(`متغير ${MATH_MODULE} = استورد("${MATH_MODULE}")`);
+      for (const module of this.modules_) head.push(`متغير ${module} = استورد("${module}")`);
       for (const name of this.variables_) head.push(`متغير ${name} = عدم`);
       const parts = [];
       if (head.length) parts.push(head.join("\n"));
@@ -364,9 +428,17 @@ function createGenerator(Blockly) {
       return "";                // كتلة قيمة وحدها في مساحة العمل لا تفعل شيئًا
     }
 
+    lib(module, name) {
+      this.modules_.add(module);
+      return `${module}.${name}`;
+    }
+
     math(name) {
-      this.usesMath_ = true;
-      return `${MATH_MODULE}.${name}`;
+      return this.lib(MATH_MODULE, name);
+    }
+
+    text(name) {
+      return this.lib(TEXT_MODULE, name);
     }
 
     // اسم متغيّر يُستعمل هنا؛ يُصرَّح عامًّا إلا إن كان وسيط دالة أو متغيّر حلقة تحيط به
@@ -530,6 +602,23 @@ function createGenerator(Blockly) {
       O.POSTFIX];
   f.noon_lib_stats = (b) =>
     [`${g.math(b.getFieldValue("FUNC"))}(${g.value(b, "LIST", O.NONE, "[]")})`, O.POSTFIX];
+
+  f.noon_text1 = (b) => [`${g.text(b.getFieldValue("FUNC"))}(${g.value(b, "TEXT", O.NONE, '""')})`, O.POSTFIX];
+  f.noon_text_find = (b) =>
+    [`${g.text(b.getFieldValue("FUNC"))}(${g.value(b, "TEXT", O.NONE, '""')}${COMMA}${g.value(b, "PART", O.NONE, '""')})`,
+      O.POSTFIX];
+  f.noon_text_similar = (b) =>
+    [`${g.text("متشابهان")}(${g.value(b, "A", O.NONE, '""')}${COMMA}${g.value(b, "B", O.NONE, '""')})`, O.POSTFIX];
+  f.noon_text_pad = (b) => {
+    const args = [g.value(b, "TEXT", O.NONE, '""'), g.value(b, "WIDTH", O.NONE, "0")];
+    const char = g.valueToCode(b, "CHAR", O.NONE);
+    if (char && char !== '" "') args.push(char);
+    return [`${g.text(b.getFieldValue("FUNC"))}(${args.join(COMMA)})`, O.POSTFIX];
+  };
+  f.noon_text_truncate = (b) =>
+    [`${g.text("اقتطع")}(${g.value(b, "TEXT", O.NONE, '""')}${COMMA}${g.value(b, "LIMIT", O.NONE, "0")})`, O.POSTFIX];
+  f.noon_text_template = (b) =>
+    [`${g.text("قالب")}(${g.value(b, "TEXT", O.NONE, '""')}${COMMA}${g.value(b, "VALUES", O.NONE, "[]")})`, O.POSTFIX];
 
   // النصوص
   f.text = (b) => [quote(b.getFieldValue("TEXT")), O.ATOMIC];

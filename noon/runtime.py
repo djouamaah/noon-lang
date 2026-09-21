@@ -35,9 +35,18 @@ class Runtime:
     def call(self, callee, args, line):
         raise NotImplementedError("على المحرّك أن يُنفّذ الاستدعاء")
 
-    def load_module(self, program):
-        """ينفّذ الشجرة النحوية لوحدة بعوامّ خاصّة بها ويُرجع قاموس عوامّها."""
+    def load_module(self, program, module):
+        """ينفّذ الشجرة النحوية لوحدة بعوامّ خاصّة بها، ويضعها في module.namespace
+        ويسجّلها بـ register_module ليُعرف في أيّ وحدة يقع الخطأ."""
         raise NotImplementedError("على المحرّك أن يُنفّذ الوحدات")
+
+    def register_module(self, key, module):
+        """key: هويّة عوامّ الوحدة في المحرّك (قاموس الآلة أو بيئة المُفسِّر)."""
+        self.__dict__.setdefault("_module_keys", {})[id(key)] = module
+
+    def module_of(self, key):
+        """الوحدة التي عوامّها key، أو None للبرنامج نفسه."""
+        return self.__dict__.get("_module_keys", {}).get(id(key))
 
     # ——————————— الوحدات ———————————
 
@@ -65,9 +74,10 @@ class Runtime:
         with open(path, encoding="utf-8-sig") as handle:
             source = handle.read()
 
+        module = Module(label, path, None, B.GLOBALS)
         loading.append(path)
         try:
-            members = self.load_module(parse(source))
+            self.load_module(parse(source), module)
         except NoonError as error:
             if getattr(error, "circular", False):   # السلسلة في الرسالة تكفي
                 circular = NoonRuntimeError(error.message, line)
@@ -79,7 +89,6 @@ class Runtime:
                                    % (error.kind, label, where, error.message), line)
         finally:
             loading.pop()
-        module = Module(label, path, members, B.GLOBALS)
         modules[path] = module
         return module
 

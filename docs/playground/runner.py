@@ -14,7 +14,7 @@ import time
 from noon import values
 from noon.bytecode import disassemble as _disassemble
 from noon.compiler import compile_source
-from noon.errors import NoonError, NoonThrow
+from noon.errors import NoonError, NoonThrow, ProgramExit
 from noon.interpreter import Interpreter
 from noon.vm import VM
 
@@ -96,8 +96,18 @@ def run(source, engine="vm", arabic_digits=False, stdin="", emit=None):
     start = time.perf_counter()
     try:
         runner.run(source)
+    except ProgramExit as done:
+        if done.code:
+            text = "انتهى البرنامج برمز الخروج %d" % done.code
+            result = _error("خروج", text, None, None, text)
+        result["exit"] = done.code
     except NoonError as error:
-        result = _error(error.kind, error.message, error.line, error.col, str(error))
+        if getattr(error, "module", None) is not None:
+            # سطر الخطأ في ملف الوحدة؛ المحرّر يعلّم سطر البرنامج الذي نادى الوحدة
+            result = _error(error.kind, error.message, error.program_line, None, str(error))
+            result["module"] = error.module.name
+        else:
+            result = _error(error.kind, error.message, error.line, error.col, str(error))
     except NoonThrow as thrown:
         text = "قيمة مرميّة لم تُلتقط: %s" % runner.stringify(thrown.value)
         result = _error("قيمة مرميّة", text, thrown.line, None, text)

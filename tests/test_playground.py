@@ -106,6 +106,15 @@ def test_disassemble_returns_text_or_the_syntax_error():
     assert bad["ok"] is False and bad["kind"] == "خطأ نحوي"
 
 
+def test_errors_in_a_library_point_at_the_programs_line():
+    """المحرّر يعلّم سطر البرنامج الذي نادى الوحدة، لا سطرًا من ملفها."""
+    for engine in ("vm", "tree"):
+        _, result, _ = _run('اطبع("قبل")\nاطبع(استورد("رياضيات").عاملي(-١))', engine=engine)
+        assert result["ok"] is False and result["line"] == 2, result
+        assert result["module"] == "رياضيات"
+        assert "في «رياضيات»]: «عاملي» تحتاج" in result["text"]
+
+
 def test_json_entry_points_are_valid_json():
     chunks = []
     data = json.loads(runner.run_json("اطبع(١)", "tree", False, "", chunks.append))

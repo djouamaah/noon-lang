@@ -5,7 +5,7 @@ import math
 import random
 import time
 
-from .errors import NoonRuntimeError
+from .errors import NoonRuntimeError, ProgramExit
 from .lexer import _DIGIT_MAP, fold
 from .values import (BuiltinFunction, NoonClass, NoonInstance, is_number,
                      set_arabic_digits, stringify, truthy, type_name, equals)
@@ -237,6 +237,14 @@ def _save_compiled(interp, args, line):
     return len(blob)
 
 
+def _exit(interp, args, line):
+    code = args[0] if args else 0
+    if not is_number(code) or code != int(code) or not 0 <= code <= 255:
+        raise NoonRuntimeError("رمز الخروج عدد صحيح من ٠ إلى ٢٥٥، لا «%s»"
+                               % interp.stringify(code), line)
+    raise ProgramExit(int(code))
+
+
 def _import(interp, args, line):
     return interp.import_module(args[0], line)
 
@@ -294,6 +302,7 @@ GLOBALS = {
     "عضو": BuiltinFunction("عضو", _member, 2),
     "احفظ_مترجما": BuiltinFunction("احفظ_مترجما", _save_compiled, 2),
     "استورد": BuiltinFunction("استورد", _import, 1),
+    "اخرج": BuiltinFunction("اخرج", _exit, 0, 1),
     "باي": math.pi,
 }
 

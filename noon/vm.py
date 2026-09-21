@@ -81,11 +81,23 @@ class VM(Runtime):
             del frames[frame_base:]
             del stack[stack_base:]
 
-    def load_module(self, program):
-        """ينفّذ برنامج وحدة بعوامّ خاصّة بها، ويُرجعها."""
-        globals_ = dict(B.GLOBALS)
+    def load_module(self, program, module):
+        """ينفّذ برنامج وحدة بعوامّ خاصّة بها."""
+        globals_ = module.namespace = dict(B.GLOBALS)
+        self.register_module(globals_, module)
         self.execute(compile_program(program), globals_, set(B.GLOBALS))
-        return globals_
+
+    def _locate(self, error):
+        """وحدة الإطار الذي وقع فيه الخطأ، وسطر البرنامج الذي بدأ النداء إليها."""
+        error.located = True
+        frames = self.frames
+        error.module = self.module_of(frames[-1].closure.globals)
+        if error.module is None:
+            return
+        for frame in reversed(frames[:-1]):
+            if self.module_of(frame.closure.globals) is None:
+                error.program_line = _line(frame, frame.ip)
+                return
 
     def call(self, callee, args, line):
         """استدعاء من خارج حلقة التنفيذ، كما تفعل `طبّق` و`فرز` بدالة المفتاح."""
@@ -561,6 +573,8 @@ class VM(Runtime):
                                                _line(frame, ip))
 
             except (NoonRuntimeError, NoonThrow) as error:
+                if isinstance(error, NoonRuntimeError) and not error.located:
+                    self._locate(error)
                 self._unwind(error, base_depth, _line(frame, ip))
 
     def _slice(self, obj, start, end, mask, line):

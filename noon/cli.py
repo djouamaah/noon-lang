@@ -12,7 +12,7 @@ import sys
 from . import bytecode
 from .builtins import PROGRAM_ARGS
 from .compiler import compile_source
-from .errors import NoonError, NoonThrow
+from .errors import NoonError, NoonThrow, ProgramExit
 from .interpreter import Interpreter
 from .lexer import tokenize
 from .parser import parse
@@ -71,23 +71,48 @@ def load_program(path):
         raise NoonError("الملف ليس نصًّا بترميز UTF-8 ولا ملفًّا مُترجَمًا")
 
 
+def _source_line(source, number):
+    lines = source.splitlines() if source else []
+    if number and 0 < number <= len(lines):
+        return lines[number - 1].rstrip()
+    return None
+
+
 def report(error, source=None, path=None):
-    """طباعة خطأ مع السطر المخالف وسهم يشير إلى موضعه."""
+    """طباعة خطأ مع السطر المخالف وسهم يشير إلى موضعه.
+
+    خطأ في دالة من وحدة مستوردة يُعرض سطره من ملف الوحدة، ثم سطر البرنامج
+    الذي بدأ منه النداء إليها.
+    """
     where = " (%s)" % path if path else ""
     print("%s%s" % (error, where), file=sys.stderr)
-    if source and getattr(error, "line", None):
-        lines = source.splitlines()
-        index = error.line - 1
-        if 0 <= index < len(lines):
-            print("  %s" % lines[index].rstrip(), file=sys.stderr)
-            if error.col:
-                print("  %s^" % (" " * max(0, error.col - 1)), file=sys.stderr)
+    module = getattr(error, "module", None)
+    if module is not None:
+        try:
+            with open(module.path, encoding="utf-8-sig") as handle:
+                line = _source_line(handle.read(), error.line)
+        except OSError:
+            line = None
+        if line is not None:
+            print("  %s" % line.strip(), file=sys.stderr)
+        program_line = _source_line(source, error.program_line)
+        if program_line is not None:
+            print("  استُدعيت من السطر %d في البرنامج:" % error.program_line, file=sys.stderr)
+            print("  %s" % program_line.strip(), file=sys.stderr)
+        return
+    line = _source_line(source, getattr(error, "line", None))
+    if line is not None:
+        print("  %s" % line, file=sys.stderr)
+        if error.col:
+            print("  %s^" % (" " * max(0, error.col - 1)), file=sys.stderr)
 
 
 def execute(engine, action, source=None, path=None):
     """ينفّذ ويُترجم الأخطاء إلى رسائل ورموز خروج."""
     try:
         action()
+    except ProgramExit as done:                    # «اخرج(رمز)»
+        return done.code
     except NoonError as error:
         report(error, source, path)
         return 1
@@ -193,9 +218,14 @@ def repl(tree=False):
         result = {}
 
         def evaluate():
-            result["value"] = engine.run(source, repl=True)
+            try:
+                result["value"] = engine.run(source, repl=True)
+            except ProgramExit as done:
+                result["exit"] = done.code
 
-        if execute(engine, evaluate, source) == 0 and result.get("value") is not None:
+        if execute(engine, evaluate, source) == 0 and "exit" in result:
+            return result["exit"]
+        if result.get("value") is not None:
             value = result["value"]
             print(stringify(value, True) if isinstance(value, str)
                   else engine.stringify(value))

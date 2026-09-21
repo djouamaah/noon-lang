@@ -6,7 +6,7 @@ import sys
 from . import ast_nodes as A
 from . import builtins as B
 from .errors import (MISPLACED, BreakSignal, ContinueSignal, NoonRuntimeError,
-                     NoonThrow, ReturnSignal)
+                     NoonThrow, ProgramExit, ReturnSignal)
 from .parser import parse
 from .runtime import INIT_METHOD, Runtime
 from .values import (BoundBuiltin, BuiltinFunction, NoonClass, NoonFunction,
@@ -78,18 +78,24 @@ class Interpreter(Runtime):
         program = parse(source)
         return self.execute_program(program, repl=repl)
 
-    def load_module(self, program):
-        """ينفّذ برنامج وحدة في بيئة عامّة خاصّة بها، ويُرجع ما عرّفته."""
+    def load_module(self, program, module):
+        """ينفّذ برنامج وحدة في بيئة عامّة خاصّة بها."""
         env = Environment()
         for name, value in B.GLOBALS.items():
             env.declare(name, value, constant=True)
+        module.namespace = env.values
+        self.register_module(env, module)
         previous = self.env
         self.env = env
         try:
             self.execute_program(program)
         finally:
             self.env = previous
-        return env.values
+
+    def _module_at(self, env):
+        while env.parent is not None:
+            env = env.parent
+        return self.module_of(env)
 
     def execute_program(self, program, repl=False):
         last = None
@@ -246,9 +252,14 @@ class Interpreter(Runtime):
                     "رسالة": error.message,
                     "سطر": error.line or node.line,
                 })
-        finally:
+        except ProgramExit:
+            raise                        # «اخرج» فوري، كما في الآلة: لا «أخيرًا»
+        except BaseException:
             if node.finally_body is not None:
                 self.execute(node.finally_body)
+            raise
+        if node.finally_body is not None:
+            self.execute(node.finally_body)
 
     def run_handler(self, node, value):
         env = Environment(self.env)
@@ -398,13 +409,23 @@ class Interpreter(Runtime):
                     self.env = previous
 
         try:
-            self.execute_block(function.body.body, env)
-        except ReturnSignal as signal:
-            return signal.value
-        except BreakSignal as signal:           # لا تعبر «توقف» حدود الدالة
-            raise NoonRuntimeError(MISPLACED["break"], signal.line)
-        except ContinueSignal as signal:
-            raise NoonRuntimeError(MISPLACED["continue"], signal.line)
+            try:
+                self.execute_block(function.body.body, env)
+            except ReturnSignal as signal:
+                return signal.value
+            except BreakSignal as signal:           # لا تعبر «توقف» حدود الدالة
+                raise NoonRuntimeError(MISPLACED["break"], signal.line)
+            except ContinueSignal as signal:
+                raise NoonRuntimeError(MISPLACED["continue"], signal.line)
+        except NoonRuntimeError as error:
+            # أوّل دالة يعبرها الخطأ هي التي وقع فيها؛ وأوّل عودة إلى البرنامج سطرُ ندائه
+            if not error.located:
+                error.located = True
+                error.module = self._module_at(function.closure)
+            if (error.module is not None and error.program_line is None
+                    and self._module_at(self.env) is None):
+                error.program_line = line
+            raise
         except RecursionError:
             raise NoonRuntimeError(
                 "تجاوز عمق الاستدعاء (تعاود لا ينتهي؟) في «%s»" % function.name,

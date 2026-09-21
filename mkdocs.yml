@@ -122,6 +122,7 @@ nav:
   - المكتبة القياسية:
       - نظرة عامة: library/index.md
       - رياضيات: library/math.md
+      - نصوص: library/strings.md
   - أمثلة: examples.md
   - الأدوات:
       - إضافة VS Code: tools/vscode.md

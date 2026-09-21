@@ -60,6 +60,24 @@ export default [
       [["p", "أوليات"]]),
   },
   {
+    name: "words",
+    title: "كلمات جملة (مكتبة نصوص)",
+    xml: XML(
+      '<block type="variables_set" x="40" y="40"><field name="VAR" id="s">جملة</field>' +
+      `<value name="VALUE">${text("السلامُ عليكم يا أهلَ نونٍ الكرام")}</value><next>` +
+      print2(text("بلا تشكيل:"),
+        `<block type="noon_text1"><field name="FUNC">بلا_تشكيل</field><value name="TEXT">${get("s", "جملة")}</value></block>`,
+        '<block type="controls_forEach"><field name="VAR" id="w">كلمة</field>' +
+        `<value name="LIST"><block type="noon_text1"><field name="FUNC">كلمات</field><value name="TEXT">${get("s", "جملة")}</value></block></value>` +
+        `<statement name="DO">${print2(
+          `<block type="noon_text_pad"><field name="FUNC">حشو_النهاية</field><value name="TEXT">${get("w", "كلمة")}</value>` +
+          `<value name="WIDTH">${number(10)}</value><value name="CHAR">${text(".")}</value></block>`,
+          `<block type="text_length"><value name="VALUE">${get("w", "كلمة")}</value></block>`)}</statement>` +
+        "</block>") +
+      "</next></block>",
+      [["s", "جملة"], ["w", "كلمة"]]),
+  },
+  {
     name: "grades",
     title: "درجات الطلاب",
     xml: XML(
