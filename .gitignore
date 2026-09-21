@@ -4,6 +4,8 @@ __pycache__/
 *.html
 # ما سبق لمعاينات التلوين المولَّدة؛ صفحة ساحة التجربة مصدر لا ناتج
 !docs/playground/index.html
+!docs/playground/blocks.html
+.claude/
 .vscode/
 site/
 *.egg-info/

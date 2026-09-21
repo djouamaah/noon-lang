@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>محرّر كتل نون</title>
+  <meta name="description" content="برمج بلغة «نون» بتركيب الكتل: اسحب الأشكال وركّبها، وشاهد الشيفرة وشغّلها في المتصفّح.">
+  <link rel="icon" href="../assets/logo.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap">
+  <link rel="stylesheet" href="playground.css">
+  <link rel="stylesheet" href="blocks.css">
+  <!-- Blockly: النواة، ثم الكتل المدمجة، ثم رسائلها العربية؛ وكتل «نون» في noon-blocks.js -->
+  <script src="https://cdn.jsdelivr.net/npm/blockly@13.3.0/blockly_compressed.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/blockly@13.3.0/blocks_compressed.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/blockly@13.3.0/msg/ar.js"></script>
+  <script type="module" src="blocks.js"></script>
+</head>
+<body>
+  <header class="bar">
+    <a class="brand" href="../" title="التوثيق">
+      <img src="../assets/logo.svg" alt="" width="28" height="28">
+      <span>محرّر الكتل</span>
+    </a>
+
+    <div class="actions">
+      <button id="run" class="primary" disabled title="Ctrl + Enter">
+        <span aria-hidden="true">▶</span> تشغيل <kbd>Ctrl ⏎</kbd>
+      </button>
+      <button id="stop" class="danger" hidden title="Esc">
+        <span aria-hidden="true">■</span> إيقاف
+      </button>
+
+      <select id="examples" aria-label="أمثلة">
+        <option value="">أمثلة…</option>
+      </select>
+
+      <button id="clear" title="امسح كل الكتل">مسح</button>
+      <button id="share" title="رابط يفتح هذه الكتل">مشاركة</button>
+      <a class="link" id="to-playground" href="index.html" title="افتح الشيفرة الناتجة في المحرّر النصّي">اكتبها نصًّا</a>
+      <a class="link" href="../">التوثيق</a>
+    </div>
+  </header>
+
+  <main class="panes blocks-panes">
+    <section class="pane workspace-pane" aria-label="مساحة الكتل">
+      <div id="workspace"></div>
+    </section>
+
+    <section class="pane output-pane">
+      <div class="tabs" role="tablist" aria-label="الناتج">
+        <button role="tab" data-tab="output" aria-controls="output" aria-selected="true">الناتج</button>
+        <button role="tab" data-tab="code" aria-controls="code" aria-selected="false">الشيفرة</button>
+        <button role="tab" data-tab="stdin" aria-controls="stdin-panel" aria-selected="false">الدخل</button>
+      </div>
+      <pre id="output" role="tabpanel" aria-live="polite"></pre>
+      <pre id="code" role="tabpanel" hidden></pre>
+      <div id="stdin-panel" role="tabpanel" hidden>
+        <p class="hint">ما تكتبه هنا تقرؤه كتلة <code>اقرأ</code>، سطرًا لكل قراءة بالترتيب.</p>
+        <textarea id="stdin" dir="auto" spellcheck="false" placeholder="هند&#10;٤٢"></textarea>
+      </div>
+    </section>
+  </main>
+
+  <footer class="status">
+    <span id="status" data-kind="loading">جارٍ التحميل…</span>
+    <span id="timing"></span>
+  </footer>
+
+  <div id="toast" role="status" hidden></div>
+
+  <noscript><p class="noscript">محرّر الكتل يحتاج JavaScript.</p></noscript>
+</body>
+</html>

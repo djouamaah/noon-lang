@@ -97,6 +97,7 @@ markdown_extensions:
 nav:
   - الرئيسية: index.md
   - ساحة التجربة: playground/index.html
+  - محرّر الكتل: playground/blocks.html
   - البدء:
       - التثبيت والتشغيل: getting-started/install.md
       - أوّل برنامج: getting-started/first-program.md

@@ -1,0 +1,66 @@
+/* محرّر الكتل: فوق playground.css، يعيد ترتيب اللوحتين ويضبط Blockly */
+
+.blocks-panes {
+  grid-template-columns: minmax(0, 1.8fr) minmax(300px, 1fr);
+}
+
+.workspace-pane { position: relative; }
+#workspace { position: absolute; inset: 0; }
+
+/* الشيفرة الناتجة: سطر لكل عنصر، ويُعلَّم سطر الخطأ */
+#code {
+  flex: 1;
+  min-height: 0;
+  margin: 0;
+  padding: 12px 0;
+  overflow: auto;
+  font-family: "IBM Plex Mono", "IBM Plex Sans Arabic", monospace;
+  font-size: 14px;
+  line-height: 1.75;
+  counter-reset: line;
+  direction: rtl;
+}
+#code .line {
+  display: block;
+  padding-inline: 14px;
+  white-space: pre;
+  /* كل سطر من اليمين، ولو لم يكن فيه إلا «}»: الشيفرة عربية كلّها */
+  direction: rtl;
+  unicode-bidi: isolate;
+  text-align: start;
+}
+#code .line::before {
+  counter-increment: line;
+  content: counter(line);
+  display: inline-block;
+  min-width: 2.2em;
+  margin-inline-end: 12px;
+  color: var(--muted);
+  text-align: end;
+  direction: ltr;
+}
+#code .line.error { background: var(--error-bg); box-shadow: inset -3px 0 0 var(--danger); }
+#code .empty { padding-inline: 16px; color: var(--muted); font-style: italic; font-family: inherit; }
+
+/* ——— Blockly ——— */
+.blocklyToolboxCategoryLabel,
+.blocklyTreeLabel,
+.blocklyFlyoutLabelText,
+.blocklyText,
+.blocklyHtmlInput,
+.blocklyMenuItemContent,
+.blocklyDropdownMenu .blocklyMenuItem {
+  font-family: "IBM Plex Sans Arabic", system-ui, sans-serif !important;
+}
+.blocklyToolbox { border-inline-start: 1px solid var(--border); }
+.blocklyToolboxCategory { padding: 2px 0; }
+.blocklyTreeRow, .blocklyToolboxCategory .blocklyTreeRow { height: 34px; line-height: 34px; }
+.blocklyTreeLabel, .blocklyToolboxCategoryLabel { font-size: 14px; }
+.blocklyWidgetDiv .blocklyMenu,
+.blocklyDropDownDiv { font-size: 14px; }
+
+@media (max-width: 760px) {
+  .blocks-panes { grid-template-columns: 1fr; }
+  .workspace-pane { height: 62vh; }
+  .output-pane { height: 36vh; }
+}

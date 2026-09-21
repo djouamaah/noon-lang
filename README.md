@@ -7,6 +7,7 @@
 
 📖 **التوثيق الكامل: [djouamaah.github.io/noon-lang](https://djouamaah.github.io/noon-lang/)**
 ▶️ **جرّبها في المتصفّح بلا تثبيت: [ساحة التجربة](https://djouamaah.github.io/noon-lang/playground/)**
+🧩 **أو برمج بتركيب الكتل: [محرّر الكتل](https://djouamaah.github.io/noon-lang/playground/blocks.html)**
 
 ```noon
 دالة مضروب(ع) {

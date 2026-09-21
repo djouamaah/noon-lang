@@ -229,6 +229,70 @@ def test_share_links_from_python_open_in_the_browser_format():
     assert json.loads(output) == code
 
 
+# ——————————————— محرّر الكتل ———————————————
+
+def test_blocks_page_is_wired_to_real_files():
+    import re
+    html = io.open(os.path.join(PLAYGROUND, "blocks.html"), encoding="utf-8").read()
+    script = io.open(os.path.join(PLAYGROUND, "blocks.js"), encoding="utf-8").read()
+    for name in re.findall(r'(?:src|href)="([\w.-]+\.(?:js|css))"', html):
+        assert os.path.exists(os.path.join(PLAYGROUND, name)), "ملف مفقود: %s" % name
+    for name in re.findall(r'from "\./([\w.-]+\.js)"', script) + ["worker.js"]:
+        generated = name in ("language.js", "examples.js")
+        assert generated or os.path.exists(os.path.join(PLAYGROUND, name)), "ملف مفقود: %s" % name
+    # نسخة Blockly واحدة للنواة والكتل والرسائل والوسائط
+    versions = set(re.findall(r"blockly@([\d.]+)/", html + script))
+    assert len(versions) == 1, versions
+    ignore = io.open(os.path.join(ROOT, ".gitignore"), encoding="utf-8").read()
+    assert "!docs/playground/blocks.html" in ignore
+
+
+def test_block_modules_parse():
+    node = shutil.which("node")
+    if node is None:
+        return
+    for name in ("blocks.js", "noon-blocks.js", "blocks-examples.js", "share.js"):
+        completed = subprocess.run([node, "--check", os.path.join(PLAYGROUND, name)],
+                                   capture_output=True, timeout=60)
+        assert completed.returncode == 0, completed.stderr.decode("utf-8", "replace")
+
+
+def test_block_names_become_valid_noon_identifiers():
+    """noonName في noon-blocks.js: ما يكتبه المستخدم اسمًا يصير معرّفًا يقبله المُحلِّل."""
+    import noon_docs
+    from noon.lexer import tokenize
+    folder = tempfile.mkdtemp()
+    try:
+        for name in ("noon-blocks.js", "normalize.js"):
+            shutil.copy(os.path.join(PLAYGROUND, name), folder)
+        with open(os.path.join(folder, "language.js"), "wb") as handle:
+            handle.write(noon_docs.playground_files()["language.js"])
+        names = ["عدد الطلاب", "إذا", "اذا", "طول", "3 أشياء", "س-ص", "", "رياضيات",
+                 "مجموع_الدرجات", "صنّف"]
+        texts = ['قال "مرحبًا"', "سطر\nثانٍ", "مائل \\ هنا"]
+        script = (
+            "import { noonName, quote } from %r;\n"
+            "process.stdout.write(JSON.stringify([JSON.parse(%r).map(noonName),"
+            " JSON.parse(%r).map(quote)]));\n"
+        ) % (_file_url(os.path.join(folder, "noon-blocks.js")),
+             json.dumps(names, ensure_ascii=False), json.dumps(texts, ensure_ascii=False))
+        output = _node(script)
+        if output is None:
+            return
+        identifiers, literals = json.loads(output)
+    finally:
+        shutil.rmtree(folder, ignore_errors=True)
+    assert identifiers[:3] == ["عدد_الطلاب", "إذا_", "اذا_"]
+    assert identifiers[9] == "صنّف"                      # التشكيل يجعله اسمًا لا كلمة
+    for identifier in identifiers:
+        tokens = [t for t in tokenize(identifier) if t.type not in ("NEWLINE", "EOF")]
+        assert [t.type for t in tokens] == ["IDENT"], (identifier, tokens)
+    # والنصوص تُقرأ كما كُتبت
+    for text, literal in zip(texts, literals):
+        tokens = [t for t in tokenize(literal) if t.type == "STRING"]
+        assert tokens and tokens[0].value == text, (literal, tokens)
+
+
 def main():
     try:
         sys.stdout.reconfigure(encoding="utf-8", errors="replace")
